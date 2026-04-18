@@ -133,7 +133,7 @@ export default function LandingPage() {
                   width={600}
                   height={600}
                   className="object-contain"
-                  unoptimized
+                  priority
                 />
               </motion.div>
             </div>
@@ -185,7 +185,6 @@ export default function LandingPage() {
                   className="object-contain"
                   priority
                   quality={100}
-                  unoptimized
                 />
               </motion.div>
             </div>
