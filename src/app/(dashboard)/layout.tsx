@@ -485,11 +485,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-40 relative">
           <div className="flex items-center gap-2">
             <div className="relative w-6 h-6">
-              <Image 
-                src="/brand/logos/favicon/icon-192x192.png" 
+              <img 
+                src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
                 alt="rifelo Logo" 
-                fill 
-                className="object-contain"
+                className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"
               />
             </div>

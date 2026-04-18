@@ -67,12 +67,10 @@ export default function LandingPage() {
       <nav className="w-full flex items-center justify-between py-6 px-6 md:px-12 max-w-7xl mx-auto z-50">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
-            <Image 
-              src="/brand/logos/favicon/icon-192x192.png" 
+            <img 
+              src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
               alt="rifelo Logo" 
-              fill 
-              className="object-contain"
-              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain"
             />
           </div>
           <span className="font-semibold text-lg tracking-tight text-[#0c0e0b]">rifelo</span>
@@ -127,13 +125,10 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, ease: "easeInOut" }}
                 className="relative z-10 shrink-0 flex items-center justify-center w-[35vw] max-w-[140px] md:w-full md:max-w-[200px]"
               >
-                <Image
-                  src="/images/wristband.png"
+                <img
+                  src="https://i.ibb.co.com/vvsX17bc/wristband.png"
                   alt="Rifelo NFC bracelet"
-                  width={600}
-                  height={600}
-                  className="object-contain"
-                  priority
+                  className="w-full h-auto object-contain"
                 />
               </motion.div>
             </div>
@@ -177,14 +172,10 @@ export default function LandingPage() {
                 }}
                 className="relative z-30 shrink-0 flex items-center justify-center w-[45vw] max-w-[180px] md:w-full md:max-w-[260px]"
               >
-                <Image
-                  src="/images/phone.png"
+                <img
+                  src="https://i.ibb.co.com/JRyHX9JW/phone.png"
                   alt="Rifelo phone demo"
-                  width={800}
-                  height={1600}
-                  className="object-contain"
-                  priority
-                  quality={100}
+                  className="w-full h-auto object-contain"
                 />
               </motion.div>
             </div>
@@ -260,11 +251,10 @@ export default function LandingPage() {
             <div className="md:col-span-5 lg:col-span-4">
               <Link href="/" className="flex items-center gap-2 group mb-6">
                 <div className="relative w-7 h-7 transition-transform group-hover:scale-105">
-                  <Image 
-                    src="/brand/logos/favicon/icon-192x192.png" 
+                  <img 
+                    src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
                     alt="rifelo Logo" 
-                    fill 
-                    className="object-contain"
+                    className="w-full h-full object-contain"
                     referrerPolicy="no-referrer"
                   />
                 </div>

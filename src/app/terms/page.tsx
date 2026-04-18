@@ -8,11 +8,10 @@ export default function TermsOfServicePage() {
       <nav className="w-full flex items-center justify-between py-6 px-6 md:px-12 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
-            <Image 
-              src="/brand/logos/favicon/icon-192x192.png" 
+            <img 
+              src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
               alt="rifelo Logo" 
-              fill 
-              className="object-contain"
+              className="w-full h-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>

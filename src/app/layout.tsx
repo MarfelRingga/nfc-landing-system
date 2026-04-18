@@ -26,13 +26,10 @@ export const metadata: Metadata = {
   robots: "index, follow",
   icons: {
     icon: [
-      { url: '/brand/logos/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/brand/logos/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/brand/logos/favicon/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/brand/logos/favicon/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: 'https://i.ibb.co.com/20WNbGMp/favicon-192x192.png', type: 'image/png' },
     ],
     apple: [
-      { url: '/brand/logos/favicon/apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
+      { url: 'https://i.ibb.co.com/20WNbGMp/favicon-192x192.png', type: 'image/png' },
     ],
   },
   manifest: '/site.webmanifest',

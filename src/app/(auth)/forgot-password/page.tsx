@@ -88,12 +88,10 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-2xl sm:text-3xl font-semibold tracking-tight text-[#0c0e0b] flex items-center justify-center gap-3">
-          <Image 
-            src="/rifelo-logo.png" 
+          <img 
+            src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
             alt="Rifelo Logo" 
-            width={36} 
-            height={36} 
-            className="object-contain"
+            className="w-9 h-9 object-contain"
           />
           Reset password
         </h2>
