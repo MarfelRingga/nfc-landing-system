@@ -1,0 +1,5 @@
+{
+  "name": "rifelo",
+  "description": "A smart event and NFC landing system with dynamic profiles, scan analytics, and multi-role management.",
+  "requestFramePermissions": []
+}

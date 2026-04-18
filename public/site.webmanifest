@@ -1,0 +1,19 @@
+{
+  "name": "RIFELO",
+  "short_name": "RIFELO",
+  "icons": [
+    {
+      "src": "/brand/logos/favicon/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/logos/favicon/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#F4F3EE",
+  "background_color": "#F4F3EE",
+  "display": "standalone"
+}
