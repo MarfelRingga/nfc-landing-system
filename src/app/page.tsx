@@ -255,45 +255,34 @@ export default function LandingPage() {
       {/* 2.5. Circle Demo Section */}
       <section id="circle-demo-section" className="min-h-[100dvh] flex flex-col items-center justify-center pt-8 pb-12 px-4 sm:px-6 w-full relative z-10 bg-[#F4F3EE]">
 
-        {/* Interactive Mockup */}
-        <div id="demo-box" className="w-full max-w-[420px] mx-auto bg-white rounded-[2rem] pt-3 pb-6 px-3 shadow-[0_12px_40px_-12px_rgba(162,153,175,0.15)] border border-[#aaafbc]/20 scroll-mt-[5px]">
-          
-          <div className="flex flex-col items-center mb-6">
-            <div className="w-full flex items-center gap-4 bg-[#F4F3EE]/50 px-4 py-2.5 rounded-full border border-[#aaafbc]/10 mb-6 shrink-0">
-              <div className="flex gap-1.5 shrink-0 opacity-80">
-                <div className="w-3 h-3 rounded-full bg-[#FF3B30]"/>
-                <div className="w-3 h-3 rounded-full bg-[#FF9500]"/>
-                <div className="w-3 h-3 rounded-full bg-[#28C840]"/>
-              </div>
-              <div className="flex-1 bg-white shadow-sm text-center text-[11px] sm:text-xs font-semibold text-[#0c0e0b]/50 py-1.5 rounded-full flex items-center justify-center gap-1.5 border border-[#aaafbc]/10">
-                <Lock className="w-3 h-3" /> rifelo.id/c/rifelo
-              </div>
-              <div className="w-12 shrink-0" />
-            </div>
-            
-            {/* View Switcher */}
-            <div className="flex bg-[#F4F3EE] p-1.5 rounded-full relative w-full h-[52px]">
-              {/* Highlight background */}
-              <div 
-                className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#1A1A1A] rounded-full transition-all duration-300 ease-out shadow-sm`}
-                style={{ left: circleView === 'public' ? '6px' : 'calc(50%)' }}
-              />
-              <button 
-                onClick={() => setCircleView('public')}
-                className={`relative z-10 w-1/2 flex items-center justify-center text-sm font-semibold transition-colors ${circleView === 'public' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
-              >
-                Tampilan Publik
-              </button>
-              <button 
-                onClick={() => setCircleView('member')}
-                className={`relative z-10 w-1/2 flex items-center justify-center text-sm font-semibold transition-colors ${circleView === 'member' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
-              >
-                Tampilan Member
-              </button>
-            </div>
-          </div>
+        {/* View Switcher */}
+        <div className="flex bg-white p-[3px] rounded-full relative w-[240px] h-[36px] mb-8 shadow-sm border border-[#aaafbc]/20 shrink-0">
+          {/* Highlight background */}
+          <div 
+            className={`absolute top-[3px] bottom-[3px] w-[calc(50%-3px)] bg-[#1A1A1A] rounded-full transition-all duration-300 ease-out shadow-sm`}
+            style={{ left: circleView === 'public' ? '3px' : 'calc(50%)' }}
+          />
+          <button 
+            onClick={() => setCircleView('public')}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-[11px] font-semibold transition-colors ${circleView === 'public' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+          >
+            Tampilan Publik
+          </button>
+          <button 
+            onClick={() => setCircleView('member')}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-[11px] font-semibold transition-colors ${circleView === 'member' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+          >
+            Tampilan Member
+          </button>
+        </div>
 
-          <div className="bg-[#0c0e0b] rounded-[2rem] border border-[#a299af]/20 overflow-hidden h-[680px] w-full relative shadow-2xl">
+        {/* Interactive Mockup */}
+        <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-[0_12px_40px_-12px_rgba(162,153,175,0.15)] border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
+          
+          <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
+             {/* Simulated Notch */}
+             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-6 bg-white/5 backdrop-blur-md rounded-b-xl max-w-[120px] z-50 mx-auto pointer-events-none border border-white/10 border-t-0"></div>
+
              <AnimatePresence mode="wait">
                {circleView === 'public' ? (
                  <motion.div
@@ -302,7 +291,7 @@ export default function LandingPage() {
                    animate={{ opacity: 1 }}
                    exit={{ opacity: 0 }}
                    transition={{ duration: 0.3 }}
-                   className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
+                   className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 pt-10 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
                  >
                     {/* Active Resonance Glow effect (Shared with member view for visual sync) */}
                     <AnimatePresence>
@@ -323,11 +312,11 @@ export default function LandingPage() {
                     </AnimatePresence>
 
                     {/* Header */}
-                    <div className="text-center z-20 mt-12 mb-10 shrink-0">
-                      <h1 className="text-2xl font-black text-white tracking-widest uppercase mb-2">
+                    <div className="text-center z-20 mt-6 mb-6 shrink-0">
+                      <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
                         rifelo
                       </h1>
-                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
+                      <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
                         {resonanceStatus === 'merged' ? (
                           <span style={{ color: '#a299af', textShadow: `0 0 10px #a299af` }}>
                             Resonance Active
@@ -339,11 +328,11 @@ export default function LandingPage() {
                     </div>
 
                     {/* Circular Presence Visual */}
-                    <div className="relative w-[200px] h-[200px] flex flex-col items-center justify-center mb-10 shrink-0">
+                    <div className="relative w-[180px] h-[180px] flex flex-col items-center justify-center mb-6 shrink-0">
                       {/* Center Circle Name & Giant Merged Circle */}
                       <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                         <div
-                          className={`absolute w-32 h-32 rounded-full flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+                          className={`absolute w-28 h-28 rounded-full flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
                             resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
                           }`}
                           style={{
@@ -353,7 +342,7 @@ export default function LandingPage() {
                         >
                           <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 40px #a299af` }} />
                         </div>
-                        <div className="font-black text-sm tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
+                        <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
                           rifelo
                         </div>
                       </div>
@@ -371,7 +360,7 @@ export default function LandingPage() {
                       >
                         {[0, 1, 2, 3, 4, 5].map((i) => {
                           const angle = (i / 6) * Math.PI * 2;
-                          const radius = 70;
+                          const radius = 64;
                           const x = (Math.cos(angle) * radius).toFixed(2);
                           const y = (Math.sin(angle) * radius).toFixed(2);
                           const color = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'][i];
@@ -414,7 +403,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Minimal Member List */}
-                    <div className="w-full flex flex-col items-center gap-3 mb-10 shrink-0">
+                    <div className="w-full flex flex-col items-center gap-2 mb-6 shrink-0">
                       {[0, 1, 2, 3, 4, 5].map((i) => {
                           const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
                           const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
@@ -439,7 +428,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Context Text */}
-                    <p className="text-[9px] text-white/20 font-medium tracking-widest uppercase mt-auto mb-4 shrink-0">
+                    <p className="text-[8px] text-white/20 font-medium tracking-widest uppercase mt-auto mb-2 shrink-0">
                       You are viewing this circle
                     </p>
                  </motion.div>
@@ -471,7 +460,7 @@ export default function LandingPage() {
                     </AnimatePresence>
 
                     {/* Top Navigation */}
-                    <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
+                    <div className="absolute top-0 left-0 right-0 p-6 pt-10 flex justify-between items-center z-50">
                       <div className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer">
                         <ArrowRight className="w-4 h-4 rotate-180" />
                         <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
@@ -486,7 +475,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Visualization Hub */}
-                    <div className="relative w-[300px] h-[300px] flex items-center justify-center z-10">
+                    <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mt-8">
                       <motion.div
                         animate={{ 
                           rotate: 360,
@@ -500,7 +489,7 @@ export default function LandingPage() {
                       >
                         {[0, 1, 2, 3, 4, 5].map((i) => {
                           const angle = (i / 6) * Math.PI * 2;
-                          const radius = 90;
+                          const radius = 80;
                           const x = (Math.cos(angle) * radius).toFixed(2);
                           const y = (Math.sin(angle) * radius).toFixed(2);
                           const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
@@ -541,7 +530,7 @@ export default function LandingPage() {
                         role="button"
                       >
                         <div
-                          className={`absolute w-32 h-32 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+                          className={`absolute w-28 h-28 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
                             resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
                           }`}
                           style={{
@@ -551,7 +540,7 @@ export default function LandingPage() {
                         >
                           <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 60px #a299af` }} />
                         </div>
-                        <div className={`font-black text-sm tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
+                        <div className={`font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
                           rifelo
                         </div>
                       </div>

@@ -405,34 +405,70 @@ export default function UnifiedCirclePage({
   if (isMember) {
     return (
       <div className="min-h-screen bg-[#0c0e0b] text-white flex flex-col items-center justify-center relative overflow-hidden font-sans">
+        {/* Active Resonance Glow effect */}
+        <AnimatePresence>
+          {phase === 'merged' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+            >
+              <div 
+                className="w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full blur-[80px] opacity-20"
+                style={{ backgroundColor: branding.resonanceColor || '#a299af' }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Top Navigation */}
-        <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
+        <div className="absolute top-0 left-0 right-0 p-6 pt-10 flex justify-between items-center z-50">
           <Link 
             href="/circle" 
-            className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest">Dashboard</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
           </Link>
           
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/50">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
               {activeCount} / {members.length} Active
             </span>
           </div>
         </div>
 
+        {/* Header */}
+        <div className="text-center z-20 mt-16 mb-4 shrink-0">
+          <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
+            {(circle.name || 'Untitled').split('\n').join(' ')}
+          </h1>
+          <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
+            {phase === 'merged' ? (
+              <span style={{ color: branding.resonanceColor || '#a299af', textShadow: `0 0 10px ${branding.resonanceColor || '#a299af'}` }}>
+                Resonance Active
+              </span>
+            ) : phase === 'accelerating' ? (
+              <span className="text-white">Resonating...</span>
+            ) : "Private Live Space"}
+          </p>
+        </div>
+
         {/* Visualization Hub */}
-        <div className="relative w-[300px] h-[300px] flex items-center justify-center">
+        <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mt-4 mb-8">
           {/* Orbit Balls Container */}
           <motion.div
             style={{ rotate: rotation }}
-            className="absolute inset-0 flex items-center justify-center"
+            animate={{ scale: phase === 'merged' ? 1.1 : 1 }}
+            transition={{ scale: { duration: 1.5, ease: "easeInOut" } }}
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           >
             {members.map((member, i) => {
               const angle = (i / members.length) * Math.PI * 2;
-              const radius = 100;
+              const radius = 80;
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
               const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
@@ -445,18 +481,18 @@ export default function UnifiedCirclePage({
               return (
                 <div
                   key={member.id}
-                  className={`absolute w-6 h-6 rounded-full shadow-lg group transition-all duration-300 border border-white/10 ${
+                  className={`absolute w-5 h-5 rounded-full shadow-lg group transition-all duration-300 border border-white/20 ${
                     isMerged ? 'opacity-0' : (isActive ? 'opacity-100' : 'opacity-30')
                   }`}
                   style={{ 
                     backgroundColor: color,
-                    boxShadow: isActive && !isMerged ? `0 0 15px ${color}80` : 'none',
+                    boxShadow: isActive && !isMerged ? `0 0 20px ${color}80` : 'none',
                     transform: `translate(${isMerged ? 0 : x}px, ${isMerged ? 0 : y}px) scale(${isActive && !isMerged ? 1.2 : 1})`
                   }}
                 >
                   {/* Tooltip */}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                    <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white">
+                    <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
                       {member.profiles?.full_name || member.profiles?.username}
                     </span>
                   </div>
@@ -467,41 +503,48 @@ export default function UnifiedCirclePage({
 
           {/* The Giant Merged Circle */}
           <div
-            className={`absolute w-40 h-40 rounded-full z-10 flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+            className={`absolute w-28 h-28 rounded-full z-10 flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
               phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`}
             style={{
               background: `radial-gradient(circle, ${branding.resonanceColor} 0%, transparent 80%)`,
-              boxShadow: `0 0 80px ${branding.resonanceColor}, inset 0 0 20px rgba(255,255,255,0.1)`
+              boxShadow: `0 0 60px ${branding.resonanceColor}, inset 0 0 20px rgba(255,255,255,0.1)`
             }}
           >
             <div
               className="absolute inset-0 rounded-full animate-pulse"
               style={{
-                boxShadow: `0 0 60px ${branding.resonanceColor}`
+                boxShadow: `0 0 40px ${branding.resonanceColor}`
               }}
             />
-            <CircleNameDisplay name={circle.name} isVisible={phase === 'merged'} />
+            <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
+              <CircleNameDisplay name={circle.name} isVisible={phase === 'merged'} />
+            </div>
           </div>
         </div>
 
-        {/* Bottom Status */}
-        <div className="absolute bottom-12 left-0 right-0 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex flex-col items-center"
-          >
-            <div className="text-xl font-bold tracking-widest uppercase mb-2">
-              {(circle.name || 'Untitled').split('\n').slice(0, 3).map((line: string, i: number) => (
-                <span key={i} className="block">{line}</span>
-              ))}
-            </div>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">
-              {phase === 'merged' ? 'Circle Synchronized' : 
-               phase === 'accelerating' ? 'Resonating...' : 'Establishing Connection...'}
-            </p>
-          </motion.div>
+        {/* Minimal Member List */}
+        <div className="w-full flex flex-col items-center gap-2 mb-10 shrink-0 z-20">
+          {members.map((member, i) => {
+            const isActive = activeProfileIds.includes(member.profile_id);
+            const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
+            const name = member.profiles?.full_name || member.profiles?.username || 'Unknown User';
+            
+            return (
+              <div key={member.id} className="flex items-center gap-2.5">
+                <div 
+                  className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+                  style={{ 
+                    backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
+                    boxShadow: isActive ? `0 0 8px ${color}` : 'none'
+                  }}
+                />
+                <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
+                  {name}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -511,77 +554,30 @@ export default function UnifiedCirclePage({
   // VIEW: PUBLIC (NOT LOGGED IN OR NOT A MEMBER)
   // ---------------------------------------------------------------------------
   const publicActiveCount = members.filter(m => activeProfileIds.includes(m.profile_id)).length;
-  const isResonanceActive = phase === 'merged';
 
   return (
     <div className="min-h-screen bg-[#0c0e0b] flex flex-col items-center justify-center py-12 px-4 sm:px-6 font-sans relative overflow-hidden">
-      {/* Resonance Glow Background */}
-      <AnimatePresence>
-        {isResonanceActive && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          >
-            <div 
-              className="w-[400px] h-[400px] rounded-full blur-[100px] opacity-20"
-              style={{ backgroundColor: branding.resonanceColor || '#ffffff' }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="relative z-10 flex flex-col items-center w-full max-w-md">
         
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-widest uppercase mb-2">
-            {circle.name}
+            {(circle.name || 'Untitled').split('\n').join(' ')}
           </h1>
           <p className="text-xs text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
-            {phase === 'merged' ? (
-              <span style={{ color: branding.resonanceColor || '#ffffff', textShadow: `0 0 10px ${branding.resonanceColor || '#ffffff'}` }}>
-                Resonance Active
-              </span>
-            ) : phase === 'accelerating' ? (
-              <span className="text-white">Resonating...</span>
-            ) : "Private Live Space"}
+            Private Circle Member
           </p>
         </div>
 
         {/* Circular Presence Visual */}
         <div className="relative w-[300px] h-[300px] flex items-center justify-center mb-16">
-          {/* Center Circle Name & Giant Merged Circle */}
+          {/* Center Circle Name */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div
-              className={`absolute w-40 h-40 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
-                phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-              }`}
-              style={{
-                background: `radial-gradient(circle, ${branding.resonanceColor} 0%, transparent 80%)`,
-                boxShadow: `0 0 80px ${branding.resonanceColor}, inset 0 0 20px rgba(255,255,255,0.1)`
-              }}
-            >
-              <div
-                className="absolute inset-0 rounded-full animate-pulse"
-                style={{
-                  boxShadow: `0 0 60px ${branding.resonanceColor}`
-                }}
-              />
-            </div>
             <CircleNameDisplay name={circle.name} isVisible={true} />
           </div>
 
           <motion.div
             style={{ rotate: rotation }}
-            animate={{ 
-              scale: phase === 'merged' ? 1.1 : 1
-            }}
-            transition={{
-              scale: { duration: 2, ease: "easeInOut" }
-            }}
             className="absolute inset-0 flex items-center justify-center"
           >
             {members.map((member, i) => {
@@ -590,40 +586,20 @@ export default function UnifiedCirclePage({
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
               const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
-              const isActive = activeProfileIds.includes(member.profile_id);
-
-              const isMerged = phase === 'merged';
 
               return (
                 <div
                   key={member.id}
-                  className={`absolute transition-all duration-700 ${isMerged ? 'opacity-0' : 'opacity-100'}`}
+                  className="absolute transition-all duration-700 opacity-100"
                   style={{ 
-                    transform: `translate(${isMerged ? 0 : x}px, ${isMerged ? 0 : y}px)`
+                    transform: `translate(${x}px, ${y}px)`
                   }}
                 >
-                  {/* Light Trail when Resonance is Active */}
-                  {isResonanceActive && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 0.8, scale: 1.5 }}
-                      transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-                      className="absolute inset-0 rounded-full blur-[8px]"
-                      style={{ backgroundColor: color }}
-                    />
-                  )}
-                  <motion.div
-                    animate={{
-                      opacity: isActive ? 1 : 0.3,
-                      scale: isActive ? 1.2 : 1,
-                    }}
-                    transition={{
-                      scale: { duration: 0.5, ease: "easeInOut" }
-                    }}
+                  <div
                     className="relative w-4 h-4 rounded-full border border-white/20"
                     style={{ 
                       backgroundColor: color,
-                      boxShadow: isActive ? `0 0 20px ${color}` : 'none',
+                      boxShadow: `0 0 20px ${color}, inset 0 0 8px rgba(255,255,255,0.6)`,
                     }}
                   />
                 </div>
@@ -658,11 +634,6 @@ export default function UnifiedCirclePage({
             </span>
           )}
         </div>
-
-        {/* Context Text */}
-        <p className="text-[10px] text-white/20 font-medium tracking-widest uppercase mb-8">
-          You are viewing this circle
-        </p>
       </div>
     </div>
   );
