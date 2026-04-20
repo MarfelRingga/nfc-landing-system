@@ -294,337 +294,340 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Interactive Mockup */}
-        <div className="relative flex items-center justify-center w-full max-w-[320px]">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#a299af]/20 rounded-full blur-[80px]" />
-          <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
-            
-            <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
-             {/* Browser Header (Circle Demo) */}
-             <div className="w-full bg-[#1A1A1A] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-white/5">
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-[#0c0e0b] rounded-b-xl max-w-[120px] pointer-events-none"></div>
-               <div className="w-full bg-white/5 rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
-                 <Lock className="w-2 h-2 text-white/40 mr-1.5" />
-                 <span className="text-[9px] text-white/60 font-medium tracking-wide">rifelo.id/c/rifelo</span>
+        {/* Interactive Mockup + Text Container */}
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 w-full max-w-6xl">
+          {/* Interactive Mockup */}
+          <div className="relative flex items-center justify-center w-full max-w-[320px] shrink-0">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#a299af]/20 rounded-full blur-[80px]" />
+            <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
+              
+              <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
+               {/* Browser Header (Circle Demo) */}
+               <div className="w-full bg-[#1A1A1A] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-white/5">
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-[#0c0e0b] rounded-b-xl max-w-[120px] pointer-events-none"></div>
+                 <div className="w-full bg-white/5 rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
+                   <Lock className="w-2 h-2 text-white/40 mr-1.5" />
+                   <span className="text-[9px] text-white/60 font-medium tracking-wide">rifelo.id/c/rifelo</span>
+                 </div>
                </div>
-             </div>
 
-             <AnimatePresence mode="wait">
-               {circleView === 'public' ? (
-                 <motion.div
-                   key="public"
-                   initial={{ opacity: 0 }}
-                   animate={{ opacity: 1 }}
-                   exit={{ opacity: 0 }}
-                   transition={{ duration: 0.3 }}
-                   className="flex-1 w-full relative flex flex-col items-center justify-center text-center p-6 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
-                 >
-                    {/* Active Resonance Glow effect (Shared with member view for visual sync) */}
-                    <AnimatePresence>
-                      {resonanceStatus === 'merged' && (
+               <AnimatePresence mode="wait">
+                 {circleView === 'public' ? (
+                   <motion.div
+                     key="public"
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     transition={{ duration: 0.3 }}
+                     className="flex-1 w-full relative flex flex-col items-center justify-center text-center p-6 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
+                   >
+                      {/* Active Resonance Glow effect (Shared with member view for visual sync) */}
+                      <AnimatePresence>
+                        {resonanceStatus === 'merged' && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 2, ease: "easeInOut" }}
+                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                          >
+                            <div 
+                              className="w-[300px] h-[300px] rounded-full blur-[80px] opacity-20"
+                              style={{ backgroundColor: '#a299af' }}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Header */}
+                      <div className="text-center z-20 mt-6 mb-6 shrink-0">
+                        <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
+                          rifelo
+                        </h1>
+                        <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
+                          {resonanceStatus === 'merged' ? (
+                            <span style={{ color: '#a299af', textShadow: `0 0 10px #a299af` }}>
+                              Resonance Active
+                            </span>
+                          ) : resonanceStatus === 'activating' ? (
+                            <span className="text-white">Resonating...</span>
+                          ) : "Private Live Space"}
+                        </p>
+                      </div>
+
+                      {/* Circular Presence Visual */}
+                      <div className="relative w-[180px] h-[180px] flex flex-col items-center justify-center mb-6 shrink-0">
+                        {/* Center Circle Name & Giant Merged Circle */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                          <div
+                            className={`absolute w-28 h-28 rounded-full flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+                              resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                            }`}
+                            style={{
+                              background: `radial-gradient(circle, #a299af 0%, transparent 80%)`,
+                              boxShadow: `0 0 60px #a299af, inset 0 0 20px rgba(255,255,255,0.1)`
+                            }}
+                          >
+                            <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 40px #a299af` }} />
+                          </div>
+                          <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
+                            rifelo
+                          </div>
+                        </div>
+
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 2, ease: "easeInOut" }}
+                          animate={{ 
+                            rotate: 360,
+                            scale: resonanceStatus === 'merged' ? 1.1 : 1
+                          }}
+                          transition={{ 
+                            rotate: { repeat: Infinity, duration: resonanceStatus === 'merged' ? 8 : 25, ease: "linear" },
+                            scale: { duration: 2, ease: "easeInOut" }
+                          }}
                           className="absolute inset-0 flex items-center justify-center pointer-events-none"
                         >
-                          <div 
-                            className="w-[300px] h-[300px] rounded-full blur-[80px] opacity-20"
-                            style={{ backgroundColor: '#a299af' }}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Header */}
-                    <div className="text-center z-20 mt-6 mb-6 shrink-0">
-                      <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
-                        rifelo
-                      </h1>
-                      <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
-                        {resonanceStatus === 'merged' ? (
-                          <span style={{ color: '#a299af', textShadow: `0 0 10px #a299af` }}>
-                            Resonance Active
-                          </span>
-                        ) : resonanceStatus === 'activating' ? (
-                          <span className="text-white">Resonating...</span>
-                        ) : "Private Live Space"}
-                      </p>
-                    </div>
-
-                    {/* Circular Presence Visual */}
-                    <div className="relative w-[180px] h-[180px] flex flex-col items-center justify-center mb-6 shrink-0">
-                      {/* Center Circle Name & Giant Merged Circle */}
-                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                        <div
-                          className={`absolute w-28 h-28 rounded-full flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
-                            resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                          }`}
-                          style={{
-                            background: `radial-gradient(circle, #a299af 0%, transparent 80%)`,
-                            boxShadow: `0 0 60px #a299af, inset 0 0 20px rgba(255,255,255,0.1)`
-                          }}
-                        >
-                          <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 40px #a299af` }} />
-                        </div>
-                        <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
-                          rifelo
-                        </div>
-                      </div>
-
-                      <motion.div
-                        animate={{ 
-                          rotate: 360,
-                          scale: resonanceStatus === 'merged' ? 1.1 : 1
-                        }}
-                        transition={{ 
-                          rotate: { repeat: Infinity, duration: resonanceStatus === 'merged' ? 8 : 25, ease: "linear" },
-                          scale: { duration: 2, ease: "easeInOut" }
-                        }}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                      >
-                        {[0, 1, 2, 3, 4, 5].map((i) => {
-                          const angle = (i / 6) * Math.PI * 2;
-                          const radius = 64;
-                          const x = (Math.cos(angle) * radius).toFixed(2);
-                          const y = (Math.sin(angle) * radius).toFixed(2);
-                          const color = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'][i];
-                          const isActive = activeIndexes.includes(i);
-                          
-                          return (
-                            <div
-                              key={i}
-                              className={`absolute transition-all duration-700 ${resonanceStatus === 'merged' ? 'opacity-0' : 'opacity-100'}`}
-                              style={{ transform: `translate(${resonanceStatus === 'merged' ? 0 : x}px, ${resonanceStatus === 'merged' ? 0 : y}px)` }}
-                            >
-                              {/* Light Trail when Resonance is Active */}
-                              {resonanceStatus === 'merged' && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.5 }}
-                                  animate={{ opacity: 0.8, scale: 1.5 }}
-                                  transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-                                  className="absolute inset-0 rounded-full blur-[6px]"
-                                  style={{ backgroundColor: color }}
-                                />
-                              )}
-                              <motion.div
-                                animate={{
-                                  opacity: isActive ? 1 : 0.3,
-                                  scale: isActive ? 1.2 : 1,
-                                }}
-                                transition={{
-                                  scale: { duration: 0.5, ease: "easeInOut" }
-                                }}
-                                className="relative w-3 h-3 rounded-full border border-white/20"
-                                style={{ 
-                                  backgroundColor: color,
-                                  boxShadow: isActive ? `0 0 15px ${color}` : 'none',
-                                }}
-                              />
-                            </div>
-                          );
-                        })}
-                      </motion.div>
-                    </div>
-
-                    {/* Minimal Member List */}
-                    <div className="w-full flex flex-col items-center gap-2 mb-6 shrink-0">
-                      {[0, 1, 2, 3, 4, 5].map((i) => {
-                          const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                          const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
-                          const isActive = activeIndexes.includes(i);
-                          const color = colors[i];
-                          
-                          return (
-                            <div key={i} className="flex items-center gap-2.5">
-                              <div 
-                                className="w-1.5 h-1.5 rounded-full transition-all duration-500"
-                                style={{ 
-                                  backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
-                                  boxShadow: isActive ? `0 0 8px ${color}` : 'none'
-                                }}
-                              />
-                              <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
-                                {names[i]}
-                              </span>
-                            </div>
-                          );
-                      })}
-                    </div>
-
-                    {/* Context Text */}
-                    <p className="text-[8px] text-white/20 font-medium tracking-widest uppercase mt-auto mb-2 shrink-0">
-                      You are viewing this circle
-                    </p>
-                 </motion.div>
-               ) : (
-                 <motion.div
-                   key="member"
-                   initial={{ opacity: 0 }}
-                   animate={{ opacity: 1 }}
-                   exit={{ opacity: 0 }}
-                   transition={{ duration: 0.3 }}
-                   className="flex-1 w-full relative flex flex-col items-center justify-center text-center bg-[#0c0e0b] text-white overflow-hidden"
-                 >
-                    {/* Active Resonance Glow effect */}
-                    <AnimatePresence>
-                      {resonanceStatus === 'merged' && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 1.5, ease: "easeInOut" }}
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
-                        >
-                          <div 
-                            className="w-[300px] h-[300px] rounded-full blur-[80px] opacity-20"
-                            style={{ backgroundColor: '#a299af' }}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Top Navigation */}
-                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
-                      <div className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer">
-                        <ArrowRight className="w-4 h-4 rotate-180" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
-                          {activeIndexes.length} / 6 Active
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Visualization Hub */}
-                    <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mb-12">
-                      <motion.div
-                        animate={{ 
-                          rotate: 360,
-                          scale: resonanceStatus === 'merged' ? 1.1 : 1
-                        }}
-                        transition={{ 
-                          rotate: { repeat: Infinity, duration: resonanceStatus === 'merged' ? 8 : 25, ease: "linear" },
-                          scale: { duration: 1.5, ease: "easeInOut" }
-                        }}
-                        className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-                      >
-                        {[0, 1, 2, 3, 4, 5].map((i) => {
-                          const angle = (i / 6) * Math.PI * 2;
-                          const radius = 80;
-                          const x = (Math.cos(angle) * radius).toFixed(2);
-                          const y = (Math.sin(angle) * radius).toFixed(2);
-                          const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                          const color = colors[i];
-                          const isActive = activeIndexes.includes(i);
-                          const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
-                          
-                          return (
-                            <div
-                              key={i}
-                              className={`absolute shadow-lg group transition-all duration-700 pointer-events-auto cursor-help ${resonanceStatus === 'merged' ? 'opacity-0' : (isActive ? 'opacity-100' : 'opacity-30')}`}
-                              style={{ 
-                                transform: `translate(${resonanceStatus === 'merged' ? 0 : x}px, ${resonanceStatus === 'merged' ? 0 : y}px) scale(${isActive && resonanceStatus !== 'merged' ? 1.2 : 1})` 
-                              }}
-                            >
+                          {[0, 1, 2, 3, 4, 5].map((i) => {
+                            const angle = (i / 6) * Math.PI * 2;
+                            const radius = 64;
+                            const x = (Math.cos(angle) * radius).toFixed(2);
+                            const y = (Math.sin(angle) * radius).toFixed(2);
+                            const color = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'][i];
+                            const isActive = activeIndexes.includes(i);
+                            
+                            return (
                               <div
-                                className="relative w-5 h-5 rounded-full border border-white/20 transition-all duration-700"
-                                style={{ 
-                                  backgroundColor: color, 
-                                  boxShadow: isActive && resonanceStatus !== 'merged' ? `0 0 20px ${color}80` : 'none',
-                                }}
-                              />
-                              {/* Tooltip */}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
+                                key={i}
+                                className={`absolute transition-all duration-700 ${resonanceStatus === 'merged' ? 'opacity-0' : 'opacity-100'}`}
+                                style={{ transform: `translate(${resonanceStatus === 'merged' ? 0 : x}px, ${resonanceStatus === 'merged' ? 0 : y}px)` }}
+                              >
+                                {/* Light Trail when Resonance is Active */}
+                                {resonanceStatus === 'merged' && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 0.8, scale: 1.5 }}
+                                    transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+                                    className="absolute inset-0 rounded-full blur-[6px]"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                )}
+                                <motion.div
+                                  animate={{
+                                    opacity: isActive ? 1 : 0.3,
+                                    scale: isActive ? 1.2 : 1,
+                                  }}
+                                  transition={{
+                                    scale: { duration: 0.5, ease: "easeInOut" }
+                                  }}
+                                  className="relative w-3 h-3 rounded-full border border-white/20"
+                                  style={{ 
+                                    backgroundColor: color,
+                                    boxShadow: isActive ? `0 0 15px ${color}` : 'none',
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </motion.div>
+                      </div>
+
+                      {/* Minimal Member List */}
+                      <div className="w-full flex flex-col items-center gap-2 mb-6 shrink-0">
+                        {[0, 1, 2, 3, 4, 5].map((i) => {
+                            const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
+                            const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+                            const isActive = activeIndexes.includes(i);
+                            const color = colors[i];
+                            
+                            return (
+                              <div key={i} className="flex items-center gap-2.5">
+                                <div 
+                                  className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ 
+                                    backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
+                                    boxShadow: isActive ? `0 0 8px ${color}` : 'none'
+                                  }}
+                                />
+                                <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
                                   {names[i]}
                                 </span>
                               </div>
-                            </div>
-                          );
+                            );
                         })}
-                      </motion.div>
+                      </div>
 
-                      {/* Giant Merged Circle */}
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center cursor-pointer z-30"
-                        onClick={handleResonanceDemo}
-                        role="button"
-                      >
-                        <div
-                          className={`absolute w-28 h-28 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
-                            resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                          }`}
-                          style={{
-                            background: `radial-gradient(circle, #a299af 0%, transparent 80%)`,
-                            boxShadow: `0 0 80px #a299af, inset 0 0 20px rgba(255,255,255,0.1)`
-                          }}
-                        >
-                          <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 60px #a299af` }} />
+                      {/* Context Text */}
+                      <p className="text-[8px] text-white/20 font-medium tracking-widest uppercase mt-auto mb-2 shrink-0">
+                        You are viewing this circle
+                      </p>
+                   </motion.div>
+                 ) : (
+                   <motion.div
+                     key="member"
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     transition={{ duration: 0.3 }}
+                     className="flex-1 w-full relative flex flex-col items-center justify-center text-center bg-[#0c0e0b] text-white overflow-hidden"
+                   >
+                      {/* Active Resonance Glow effect */}
+                      <AnimatePresence>
+                        {resonanceStatus === 'merged' && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 1.5, ease: "easeInOut" }}
+                            className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+                          >
+                            <div 
+                              className="w-[300px] h-[300px] rounded-full blur-[80px] opacity-20"
+                              style={{ backgroundColor: '#a299af' }}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Top Navigation */}
+                      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
+                        <div className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer">
+                          <ArrowRight className="w-4 h-4 rotate-180" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
                         </div>
-                        <div className={`font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
-                          rifelo
+                        
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
+                            {activeIndexes.length} / 6 Active
+                          </span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Bottom Status (Absolute) */}
-                    <div className="absolute bottom-20 left-0 right-0 text-center pointer-events-none">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex flex-col items-center"
-                      >
-                        <div className="text-xl font-bold tracking-widest uppercase mb-1">
-                          rifelo
+                      {/* Visualization Hub */}
+                      <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mb-12">
+                        <motion.div
+                          animate={{ 
+                            rotate: 360,
+                            scale: resonanceStatus === 'merged' ? 1.1 : 1
+                          }}
+                          transition={{ 
+                            rotate: { repeat: Infinity, duration: resonanceStatus === 'merged' ? 8 : 25, ease: "linear" },
+                            scale: { duration: 1.5, ease: "easeInOut" }
+                          }}
+                          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+                        >
+                          {[0, 1, 2, 3, 4, 5].map((i) => {
+                            const angle = (i / 6) * Math.PI * 2;
+                            const radius = 80;
+                            const x = (Math.cos(angle) * radius).toFixed(2);
+                            const y = (Math.sin(angle) * radius).toFixed(2);
+                            const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
+                            const color = colors[i];
+                            const isActive = activeIndexes.includes(i);
+                            const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+                            
+                            return (
+                              <div
+                                key={i}
+                                className={`absolute shadow-lg group transition-all duration-700 pointer-events-auto cursor-help ${resonanceStatus === 'merged' ? 'opacity-0' : (isActive ? 'opacity-100' : 'opacity-30')}`}
+                                style={{ 
+                                  transform: `translate(${resonanceStatus === 'merged' ? 0 : x}px, ${resonanceStatus === 'merged' ? 0 : y}px) scale(${isActive && resonanceStatus !== 'merged' ? 1.2 : 1})` 
+                                }}
+                              >
+                                <div
+                                  className="relative w-5 h-5 rounded-full border border-white/20 transition-all duration-700"
+                                  style={{ 
+                                    backgroundColor: color, 
+                                    boxShadow: isActive && resonanceStatus !== 'merged' ? `0 0 20px ${color}80` : 'none',
+                                  }}
+                                />
+                                {/* Tooltip */}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                  <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
+                                    {names[i]}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </motion.div>
+
+                        {/* Giant Merged Circle */}
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer z-30"
+                          onClick={handleResonanceDemo}
+                          role="button"
+                        >
+                          <div
+                            className={`absolute w-28 h-28 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+                              resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                            }`}
+                            style={{
+                              background: `radial-gradient(circle, #a299af 0%, transparent 80%)`,
+                              boxShadow: `0 0 80px #a299af, inset 0 0 20px rgba(255,255,255,0.1)`
+                            }}
+                          >
+                            <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 60px #a299af` }} />
+                          </div>
+                          <div className={`font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
+                            rifelo
+                          </div>
                         </div>
-                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">
-                          {resonanceStatus === 'merged' ? 'Circle Synchronized' : 
-                           resonanceStatus === 'activating' ? 'Resonating...' : 'Establishing Connection...'}
-                        </p>
-                      </motion.div>
-                    </div>
+                      </div>
 
-                    {/* Small Resonance CTA */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-                      <button 
-                        onClick={handleResonanceDemo}
-                        disabled={resonanceStatus === 'activating' || resonanceStatus === 'merged'}
-                        className={`px-4 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-lg transition-all duration-500 border ${
-                          resonanceStatus === 'merged' || resonanceStatus === 'activating'
-                            ? 'bg-[#1A1A1A] text-white/40 border-white/5 opacity-50'
-                            : 'bg-white/10 text-white hover:bg-white/20 border-white/20 backdrop-blur-md active:scale-95'
-                        }`}
-                      >
-                        {resonanceStatus === 'merged' ? 'Resonance Active' : resonanceStatus === 'activating' ? 'Synchronizing...' : 'Trigger Resonance'}
-                      </button>
-                    </div>
-                 </motion.div>
-               )}
-             </AnimatePresence>
+                      {/* Bottom Status (Absolute) */}
+                      <div className="absolute bottom-20 left-0 right-0 text-center pointer-events-none">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="inline-flex flex-col items-center"
+                        >
+                          <div className="text-xl font-bold tracking-widest uppercase mb-1">
+                            rifelo
+                          </div>
+                          <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">
+                            {resonanceStatus === 'merged' ? 'Circle Synchronized' : 
+                             resonanceStatus === 'activating' ? 'Resonating...' : 'Establishing Connection...'}
+                          </p>
+                        </motion.div>
+                      </div>
+
+                      {/* Small Resonance CTA */}
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+                        <button 
+                          onClick={handleResonanceDemo}
+                          disabled={resonanceStatus === 'activating' || resonanceStatus === 'merged'}
+                          className={`px-4 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-lg transition-all duration-500 border ${
+                            resonanceStatus === 'merged' || resonanceStatus === 'activating'
+                              ? 'bg-[#1A1A1A] text-white/40 border-white/5 opacity-50'
+                              : 'bg-white/10 text-white hover:bg-white/20 border-white/20 backdrop-blur-md active:scale-95'
+                          }`}
+                        >
+                          {resonanceStatus === 'merged' ? 'Resonance Active' : resonanceStatus === 'activating' ? 'Synchronizing...' : 'Trigger Resonance'}
+                        </button>
+                      </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Text Description Below Demo Circle */}
-        <div className="mt-16 text-center max-w-xl mx-auto flex flex-col items-center px-4 shrink-0">
-          <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center">
-            <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-center">Your Dynamic Circle,</span>
-            <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-center text-[#0c0e0b]/50">Live & Synchronized.</span>
-          </h2>
-          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8">
-            Ketahui siapa saja yang sedang aktif dan hadir di sekeliling Anda secara instan. Fitur Circle menghubungkan anggota secara visual tanpa batas waktu. Interaktif, mulus, dan hidup layaknya di dunia nyata.
-          </p>
-          <Link 
-            href="/join-rifelo"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-full font-medium hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 text-sm"
-          >
-            Mulai Circle Baru <ArrowRight className="w-4 h-4" />
-          </Link>
+          
+          {/* Text Description Container */}
+          <div className="text-center lg:text-left max-w-xl flex flex-col items-center lg:items-start px-4 shrink-0">
+            <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center lg:items-start">
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Your Dynamic Circle,</span>
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-[#0c0e0b]/50">Live & Synchronized.</span>
+            </h2>
+            <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8">
+              Ketahui siapa saja yang sedang aktif dan hadir di sekeliling Anda secara instan. Fitur Circle menghubungkan anggota secara visual tanpa batas waktu. Interaktif, mulus, dan hidup layaknya di dunia nyata.
+            </p>
+            <Link 
+              href="/join-rifelo"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-full font-medium hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 text-sm"
+            >
+              Mulai Circle Baru <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
         
       </section>
