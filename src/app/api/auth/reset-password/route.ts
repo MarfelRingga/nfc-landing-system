@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { formatIndonesianPhoneNumber } from '@/lib/phone';
+import { isRateLimited } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
+    // 1. Rate Limiting protection
+    let ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    // If it's a list, take the first one (real client IP)
+    if (ip.includes(',')) ip = ip.split(',')[0].trim();
+    if (isRateLimited(ip)) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const { phone, code: rawCode, newPassword } = await request.json();
 
     if (!phone || !rawCode || !newPassword) {
@@ -16,8 +25,9 @@ export async function POST(request: Request) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[System] Missing SUPABASE_SERVICE_ROLE_KEY');
       return NextResponse.json(
-        { error: 'Server configuration error. Missing service role key.' },
+        { error: 'Server error. Please contact support.' },
         { status: 500 }
       );
     }
@@ -35,9 +45,7 @@ export async function POST(request: Request) {
     const phoneWithoutPlus = formattedPhone.startsWith('+') ? formattedPhone.substring(1) : formattedPhone;
     const localPhone = phoneWithoutPlus.startsWith('62') ? '0' + phoneWithoutPlus.substring(2) : phoneWithoutPlus;
 
-    console.log(`[Reset Password] Searching for phone: '${formattedPhone}', '${phoneWithoutPlus}', or '${localPhone}', code: '${code}'`);
-
-    // 1. Verify the code in reset_codes table
+    // 2. Verify the code in reset_codes table
     // We fetch by secret_code first, then filter by phone in JS to handle any phone formatting in the database
     const { data: resetRecords, error: resetError } = await supabaseAdmin
       .from('reset_codes')
@@ -46,9 +54,9 @@ export async function POST(request: Request) {
       .not('is_used', 'eq', true);
 
     if (resetError) {
-      console.error('[Reset Password] Database error:', resetError);
+      console.error('[Reset Password] External DB error:', resetError.message);
       return NextResponse.json(
-        { error: `Database error: ${resetError.message}. Did you run the SQL script?` },
+        { error: 'Server operation failed. Please try again later.' },
         { status: 500 }
       );
     }
@@ -73,7 +81,6 @@ export async function POST(request: Request) {
     });
 
     if (!resetRecord) {
-      console.log(`[Reset Password] No match found. Make sure the database has phone='${formattedPhone}' or '${phoneWithoutPlus}' and secret_code='${code}' and is_used=false`);
       return NextResponse.json(
         { error: 'Invalid or expired reset code. Please check your phone number and code.' },
         { status: 400 }
@@ -88,7 +95,6 @@ export async function POST(request: Request) {
 
     // If not found, try without '+' (in case it was saved differently during registration)
     if (!userId && !rpcError) {
-      console.log(`[Reset Password] User not found with '${formattedPhone}', trying '${phoneWithoutPlus}'...`);
       const fallbackResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
         phone_number: phoneWithoutPlus
       });
@@ -98,7 +104,6 @@ export async function POST(request: Request) {
 
     // If still not found, try local format (08...)
     if (!userId && !rpcError) {
-      console.log(`[Reset Password] User not found with '${phoneWithoutPlus}', trying '${localPhone}'...`);
       const localResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
         phone_number: localPhone
       });
@@ -109,7 +114,6 @@ export async function POST(request: Request) {
     // If still not found, try raw phone without prefix (8...)
     if (!userId && !rpcError) {
       const rawPhone = phoneWithoutPlus.startsWith('62') ? phoneWithoutPlus.substring(2) : phoneWithoutPlus;
-      console.log(`[Reset Password] User not found with '${localPhone}', trying '${rawPhone}'...`);
       const rawResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
         phone_number: rawPhone
       });
@@ -118,9 +122,9 @@ export async function POST(request: Request) {
     }
 
     if (rpcError) {
-      console.error('RPC error when getting user ID:', rpcError);
+      console.error('RPC error when getting user ID:', rpcError.message);
       return NextResponse.json(
-        { error: `RPC error: ${rpcError.message}. Did you create the get_user_id_by_phone function?` },
+        { error: 'System error while identifying user account.' },
         { status: 500 }
       );
     }

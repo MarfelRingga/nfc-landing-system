@@ -51,8 +51,7 @@ function LoginForm() {
         router.push(redirectUrl);
       }
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      setError('Gagal masuk. Silakan periksa kembali kredensial Anda dan coba lagi.');
     } finally {
       setIsLoading(false);
     }
@@ -167,11 +166,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-semibold tracking-tight text-[#0c0e0b] flex items-center justify-center gap-3">
-          <img 
-            src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
-            alt="Rifelo Logo" 
-            className="w-9 h-9 object-contain"
-           referrerPolicy="no-referrer" />
+          <Link href="/" className="hover:opacity-80 transition-opacity" title="Back to Home">
+            <img 
+              src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
+              alt="Rifelo Logo" 
+              className="w-9 h-9 object-contain"
+              referrerPolicy="no-referrer" 
+            />
+          </Link>
           Log in
         </h2>
         <p className="mt-2 text-center text-sm text-[#0c0e0b]/70">

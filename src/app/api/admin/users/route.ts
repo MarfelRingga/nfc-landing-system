@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { isRateLimited } from '@/lib/rate-limit';
 
 export async function GET(request: Request) {
   try {
+    // Rate Limiting
+    let ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (ip.includes(',')) ip = ip.split(',')[0].trim();
+    if (isRateLimited(ip)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     // Verify admin status
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
@@ -50,7 +58,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ users: mergedProfiles });
   } catch (error: any) {
-    console.error('Error in /api/admin/users:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    console.error('[Admin Users API] Error evaluating users list:', error.message);
+    return NextResponse.json({ error: 'Internal server error while fetching user data' }, { status: 500 });
   }
 }

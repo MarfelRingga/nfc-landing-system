@@ -30,16 +30,14 @@ export default function ForgotPasswordPage() {
           .maybeSingle();
 
         if (error) {
-          if (error.code === '42P01' || error.message?.includes('app_settings')) {
-            console.warn('app_settings table not found. Support link unavailable.');
-          } else {
+          if (error.code !== '42P01' && !error.message?.includes('app_settings')) {
             throw error;
           }
         } else if (data?.value) {
           setSupportLink(data.value);
         }
       } catch (err) {
-        console.error('Error fetching support link:', err);
+        // Soft fail
       } finally {
         setIsLoading(false);
       }
@@ -78,7 +76,7 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to reset password. Please check your code and try again.');
+      setError('Gagal mengatur ulang kata sandi. Silakan periksa kembali kode Anda dan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,11 +86,14 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-2xl sm:text-3xl font-semibold tracking-tight text-[#0c0e0b] flex items-center justify-center gap-3">
-          <img 
-            src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
-            alt="Rifelo Logo" 
-            className="w-9 h-9 object-contain"
-           referrerPolicy="no-referrer" />
+          <Link href="/" className="hover:opacity-80 transition-opacity" title="Back to Home">
+            <img 
+              src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
+              alt="Rifelo Logo" 
+              className="w-9 h-9 object-contain"
+              referrerPolicy="no-referrer" 
+            />
+          </Link>
           Reset password
         </h2>
         <p className="mt-2 text-center text-sm text-[#0c0e0b]/70 px-4 sm:px-0">

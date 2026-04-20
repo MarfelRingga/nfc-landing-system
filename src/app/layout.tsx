@@ -19,11 +19,15 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "rifelo - Fluidly Connected",
+  metadataBase: new URL('https://rifelo.id'),
+  title: "Rifelo — Platform Profil Interaktif Real-Time",
   description: "The silent anchor of your professional identity. A matte silicone masterpiece for the modern era.",
-  keywords: ["NFC", "Digital Business Card", "Smart Tag", "Landing Page", "rifelo", "Identity Management"],
-  authors: [{ name: "rifelo Team" }],
+  keywords: ["NFC", "Digital Business Card", "Smart Tag", "Landing Page", "Rifelo", "Identity Management", "Interactive Profile"],
+  authors: [{ name: "Rifelo Team" }],
   robots: "index, follow",
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: 'https://i.ibb.co.com/20WNbGMp/favicon-192x192.png', type: 'image/png' },
@@ -34,15 +38,16 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: "rifelo - Fluidly Connected",
+    title: "Rifelo — Platform Profil Interaktif Real-Time",
     description: "Connect physical tags to digital experiences instantly.",
+    url: 'https://rifelo.id',
     type: "website",
     locale: "id_ID",
-    siteName: "rifelo",
+    siteName: "Rifelo",
   },
   twitter: {
     card: "summary_large_image",
-    title: "rifelo - Fluidly Connected",
+    title: "Rifelo — Platform Profil Interaktif Real-Time",
     description: "Connect physical tags to digital experiences instantly.",
   },
 };

@@ -26,7 +26,21 @@ export default function LandingPage() {
   const [circleView, setCircleView] = useState<'public' | 'member'>('public');
   const [resonanceStatus, setResonanceStatus] = useState<'idle' | 'activating' | 'merged'>('idle');
   const [activeIndexes, setActiveIndexes] = useState<number[]>([0, 1]); // initial 2 members active state
-  
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Rifelo",
+    "applicationCategory": "SocialNetworkingApplication",
+    "operatingSystem": "Any",
+    "description": "Platform Profil Interaktif Real-Time. The silent anchor of your professional identity. Connect physical tags to digital experiences.",
+    "url": "https://rifelo.id",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Rifelo"
+    }
+  };
+
   const handleResonanceDemo = async () => {
     if (resonanceStatus !== 'idle') {
       setResonanceStatus('idle');
@@ -103,6 +117,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       
       {/* 1. Navbar (Minimalist) */}
       <nav className="w-full flex items-center justify-between py-6 px-6 md:px-12 max-w-7xl mx-auto z-50">
@@ -134,7 +152,7 @@ export default function LandingPage() {
       </nav>
 
       {/* 2. Hero Section */}
-      <main className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden w-full">
+      <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden w-full">
         {/* Subtle background glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-[#a299af]/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -253,24 +271,24 @@ export default function LandingPage() {
       </main>
 
       {/* 2.5. Circle Demo Section */}
-      <section id="circle-demo-section" className="min-h-[100dvh] flex flex-col items-center justify-center pt-8 pb-12 px-4 sm:px-6 w-full relative z-10 bg-[#F4F3EE]">
+      <section id="circle-demo-section" className="min-h-screen flex flex-col items-center justify-center pt-8 pb-12 px-4 sm:px-6 w-full relative z-10 bg-[#F4F3EE]">
 
         {/* View Switcher */}
-        <div className="flex bg-white p-[3px] rounded-full relative w-[240px] h-[36px] mb-8 shadow-sm border border-[#aaafbc]/20 shrink-0">
+        <div className="flex bg-white p-[4px] rounded-full relative w-[280px] h-[44px] mb-8 shadow-md border border-[#aaafbc]/20 shrink-0">
           {/* Highlight background */}
           <div 
-            className={`absolute top-[3px] bottom-[3px] w-[calc(50%-3px)] bg-[#1A1A1A] rounded-full transition-all duration-300 ease-out shadow-sm`}
-            style={{ left: circleView === 'public' ? '3px' : 'calc(50%)' }}
+            className={`absolute top-[4px] bottom-[4px] w-[calc(50%-4px)] bg-[#1A1A1A] rounded-full transition-all duration-300 ease-out shadow-sm`}
+            style={{ left: circleView === 'public' ? '4px' : 'calc(50%)' }}
           />
           <button 
             onClick={() => setCircleView('public')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-[11px] font-semibold transition-colors ${circleView === 'public' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-semibold transition-colors ${circleView === 'public' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
           >
             Tampilan Publik
           </button>
           <button 
             onClick={() => setCircleView('member')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-[11px] font-semibold transition-colors ${circleView === 'member' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-semibold transition-colors ${circleView === 'member' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
           >
             Tampilan Member
           </button>
@@ -588,9 +606,27 @@ export default function LandingPage() {
                  </motion.div>
                )}
              </AnimatePresence>
+            </div>
           </div>
         </div>
+        
+        {/* Text Description Below Demo Circle */}
+        <div className="mt-16 text-center max-w-xl mx-auto flex flex-col items-center px-4 shrink-0">
+          <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center">
+            <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-center">Your Dynamic Circle,</span>
+            <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-center text-[#0c0e0b]/50">Live & Synchronized.</span>
+          </h2>
+          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8">
+            Ketahui siapa saja yang sedang aktif dan hadir di sekeliling Anda secara instan. Fitur Circle menghubungkan anggota secara visual tanpa batas waktu. Interaktif, mulus, dan hidup layaknya di dunia nyata.
+          </p>
+          <Link 
+            href="/join-rifelo"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-full font-medium hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 text-sm"
+          >
+            Mulai Circle Baru <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
+        
       </section>
 
       {/* 3. Demo Section */}
@@ -598,8 +634,9 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left Text */}
           <div className="order-2 lg:order-1 flex flex-col items-start text-left max-w-lg mx-auto lg:mx-0">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-[#0c0e0b] mb-6">
-              Your Professional Identity, <br/><span className="text-[#0c0e0b]/50">Instantly Shared.</span>
+            <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-6 leading-tight flex flex-col">
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Your Professional Identity,</span>
+              <span className="text-[#0c0e0b]/50 mt-1 text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Instantly Shared.</span>
             </h2>
             <p className="text-[#0c0e0b]/70 leading-relaxed mb-8">
               Satu sentuhan sederhana pada gelang RIFELO ke smartphone apa pun, dan profil digital Anda langsung terbuka tanpa memerlukan aplikasi tambahan. Elegan, instan, dan selalu siap sedia.
@@ -797,23 +834,22 @@ export default function LandingPage() {
 
             {/* Links: Product */}
             <div className="md:col-span-3 lg:col-span-2 lg:col-start-6">
-              <h4 className="font-semibold text-[#0c0e0b] mb-5 text-xs tracking-widest uppercase">Product</h4>
+              <h4 className="font-semibold text-[#0c0e0b] mb-5 text-xs tracking-widest uppercase">Platform</h4>
               <ul className="space-y-4 text-sm text-[#0c0e0b]/60">
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">Smart Wristbands</Link></li>
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">Event Dashboard</Link></li>
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">Live Resonance</Link></li>
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">NFC Technology</Link></li>
+                <li><Link href="/what-is-rifelo" className="hover:text-[#0c0e0b] transition-colors">Apa itu Rifelo?</Link></li>
+                <li><Link href="/rifelo-features" className="hover:text-[#0c0e0b] transition-colors">Fitur Rifelo</Link></li>
+                <li><Link href="/join-rifelo" className="hover:text-[#0c0e0b] transition-colors">Mulai Circle Baru</Link></li>
               </ul>
             </div>
 
             {/* Links: Company */}
             <div className="md:col-span-2 lg:col-span-2">
-              <h4 className="font-semibold text-[#0c0e0b] mb-5 text-xs tracking-widest uppercase">Company</h4>
+              <h4 className="font-semibold text-[#0c0e0b] mb-5 text-xs tracking-widest uppercase">Perusahaan</h4>
               <ul className="space-y-4 text-sm text-[#0c0e0b]/60">
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">About Us</Link></li>
-                <li><Link href={contactLink} className="hover:text-[#0c0e0b] transition-colors">Contact Support</Link></li>
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">Partnerships</Link></li>
-                <li><Link href="#" className="hover:text-[#0c0e0b] transition-colors">Help Center</Link></li>
+                <li><Link href="/" className="hover:text-[#0c0e0b] transition-colors">Beranda</Link></li>
+                <li><Link href="/signup" className="hover:text-[#0c0e0b] transition-colors">Daftar</Link></li>
+                <li><Link href="/login" className="hover:text-[#0c0e0b] transition-colors">Masuk</Link></li>
+                <li><Link href={contactLink} className="hover:text-[#0c0e0b] transition-colors">Hubungi Kami</Link></li>
               </ul>
             </div>
 
