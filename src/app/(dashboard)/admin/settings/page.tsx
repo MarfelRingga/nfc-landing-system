@@ -1,13 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { getPlatformInfo } from '@/lib/platforms';
+
+interface AdminLink {
+  id: string;
+  title: string;
+  url: string;
+  is_visible?: boolean;
+}
 
 export default function AdminSettingsPage() {
   const [contactSupportLink, setContactSupportLink] = useState('');
   const [getYoursNowLink, setGetYoursNowLink] = useState('');
+  const [globalLinks, setGlobalLinks] = useState<AdminLink[]>([]);
+  const [expandedLinks, setExpandedLinks] = useState<Record<string, boolean>>({});
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +31,7 @@ export default function AdminSettingsPage() {
         const { data, error } = await supabase
           .from('app_settings')
           .select('id, value')
-          .in('id', ['contact_support_link', 'get_yours_now_link']);
+          .in('id', ['contact_support_link', 'get_yours_now_link', 'global_platforms_links']);
 
         if (error) {
           if (error.code === '42P01' || error.message?.includes('app_settings')) {
@@ -31,8 +42,15 @@ export default function AdminSettingsPage() {
         } else if (data) {
           const linkSetting = data.find(s => s.id === 'contact_support_link');
           const getYoursSetting = data.find(s => s.id === 'get_yours_now_link');
+          const globalLinksSetting = data.find(s => s.id === 'global_platforms_links');
+          
           if (linkSetting) setContactSupportLink(linkSetting.value || '');
           if (getYoursSetting) setGetYoursNowLink(getYoursSetting.value || '');
+          if (globalLinksSetting && globalLinksSetting.value) {
+            try {
+              setGlobalLinks(JSON.parse(globalLinksSetting.value));
+            } catch (e) {}
+          }
         }
       } catch (err: any) {
         console.error('Error fetching settings:', err);
@@ -45,6 +63,28 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
+  const handleAddLink = () => {
+    const newId = crypto.randomUUID();
+    setGlobalLinks([...globalLinks, { id: newId, title: '', url: '', is_visible: true }]);
+    setExpandedLinks(prev => ({ ...prev, [newId]: true }));
+  };
+
+  const toggleLinkExpansion = (id: string) => {
+    setExpandedLinks(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleRemoveLink = (id: string) => {
+    setGlobalLinks(globalLinks.filter(l => l.id !== id));
+  };
+
+  const handleToggleVisibility = (id: string) => {
+    setGlobalLinks(globalLinks.map(l => l.id === id ? { ...l, is_visible: l.is_visible === false ? true : false } : l));
+  };
+
+  const handleLinkChange = (id: string, field: 'title' | 'url', value: string) => {
+    setGlobalLinks(globalLinks.map(l => l.id === id ? { ...l, [field]: value } : l));
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
@@ -55,7 +95,8 @@ export default function AdminSettingsPage() {
         .from('app_settings')
         .upsert([
           { id: 'contact_support_link', value: contactSupportLink },
-          { id: 'get_yours_now_link', value: getYoursNowLink }
+          { id: 'get_yours_now_link', value: getYoursNowLink },
+          { id: 'global_platforms_links', value: JSON.stringify(globalLinks) }
         ]);
 
       if (error) {
@@ -179,6 +220,131 @@ CREATE POLICY "Allow admin write access on app_settings"
                 disabled={needsMigration}
               />
             </div>
+          </div>
+        </div>
+
+        {/* Custom Links Section */}
+        <div className="pt-6 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Platforms & Links</h3>
+              <p className="text-xs text-slate-500 mt-1">Manage global default links and platforms available to the system.</p>
+            </div>
+            <button 
+              type="button"
+              onClick={handleAddLink}
+              disabled={needsMigration}
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 sm:px-3 sm:py-1.5 bg-slate-900 text-white text-sm sm:text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5 mr-1.5 sm:mr-1" />
+              Add Platform
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {globalLinks.map((link) => {
+              const isExpanded = expandedLinks[link.id];
+              const platformInfo = getPlatformInfo(link.title || '', link.url || '');
+              const Icon = platformInfo ? platformInfo.icon : Globe;
+              
+              return (
+                <div key={link.id} className="flex flex-col bg-slate-50 rounded-xl border border-slate-200 group relative overflow-hidden transition-all">
+                  <div 
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => toggleLinkExpansion(link.id)}
+                  >
+                    <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                      <div className={`w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 ${platformInfo ? platformInfo.color : 'text-slate-400'}`}>
+                        {platformInfo ? (
+                          <Icon className="w-4 h-4" />
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400">
+                            {link.title ? link.title.charAt(0).toUpperCase() : '#'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 truncate">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {link.title || 'New Platform'}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {link.url || 'No URL provided'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleVisibility(link.id);
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          link.is_visible === false 
+                            ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-200' 
+                            : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                        }`}
+                        title={link.is_visible === false ? "Hidden" : "Visible"}
+                      >
+                        {link.is_visible === false ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveLink(link.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove Link"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                        title={isExpanded ? "Collapse" : "Expand"}
+                      >
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="p-4 pt-0 border-t border-slate-100 mt-2">
+                      <div className="flex flex-col sm:flex-row gap-4 items-start w-full">
+                        <div className="flex-1 w-full space-y-4 pt-2">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
+                            <input 
+                              type="text" 
+                              placeholder="e.g., Instagram, Portfolio, WhatsApp" 
+                              value={link.title}
+                              onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
+                              className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-700 mb-1.5">Action URL</label>
+                            <input 
+                              type="text" 
+                              placeholder="e.g., https://instagram.com/rifelo" 
+                              value={link.url}
+                              onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
+                              className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {globalLinks.length === 0 && (
+              <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                <Globe className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-medium text-slate-900 mb-1">No platforms added</p>
+                <p className="text-xs text-slate-500">Click the button above to add a new link.</p>
+              </div>
+            )}
           </div>
         </div>
 

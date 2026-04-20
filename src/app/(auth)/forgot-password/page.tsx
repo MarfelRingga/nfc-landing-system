@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
             src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
             alt="Rifelo Logo" 
             className="w-9 h-9 object-contain"
-          />
+           referrerPolicy="no-referrer" />
           Reset password
         </h2>
         <p className="mt-2 text-center text-sm text-[#0c0e0b]/70 px-4 sm:px-0">

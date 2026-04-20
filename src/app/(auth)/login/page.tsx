@@ -171,7 +171,7 @@ export default function LoginPage() {
             src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
             alt="Rifelo Logo" 
             className="w-9 h-9 object-contain"
-          />
+           referrerPolicy="no-referrer" />
           Log in
         </h2>
         <p className="mt-2 text-center text-sm text-[#0c0e0b]/70">
