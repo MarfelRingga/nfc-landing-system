@@ -50,7 +50,7 @@ function ClaimContent() {
 
         <div className="space-y-3 pt-6">
           <Link 
-            href={`/signup?redirect=${redirectUrl}`}
+            href={`/signup?claimToken=${token}&redirect=${redirectUrl}`}
             className="w-full flex items-center justify-center gap-2 bg-[#0c0e0b] text-white py-3.5 px-4 rounded-xl font-medium hover:bg-[#1a1a1a] transition-all active:scale-[0.98] shadow-md"
           >
             Create Account to Claim

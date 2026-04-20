@@ -19,10 +19,10 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "RIFELO - Fluidly Connected",
+  title: "rifelo - Fluidly Connected",
   description: "The silent anchor of your professional identity. A matte silicone masterpiece for the modern era.",
-  keywords: ["NFC", "Digital Business Card", "Smart Tag", "Landing Page", "RIFELO", "Identity Management"],
-  authors: [{ name: "RIFELO Team" }],
+  keywords: ["NFC", "Digital Business Card", "Smart Tag", "Landing Page", "rifelo", "Identity Management"],
+  authors: [{ name: "rifelo Team" }],
   robots: "index, follow",
   icons: {
     icon: [
@@ -34,15 +34,15 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: "RIFELO - Fluidly Connected",
+    title: "rifelo - Fluidly Connected",
     description: "Connect physical tags to digital experiences instantly.",
     type: "website",
     locale: "id_ID",
-    siteName: "RIFELO",
+    siteName: "rifelo",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RIFELO - Fluidly Connected",
+    title: "rifelo - Fluidly Connected",
     description: "Connect physical tags to digital experiences instantly.",
   },
 };

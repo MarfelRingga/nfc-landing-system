@@ -277,11 +277,19 @@ export default function LandingPage() {
         </div>
 
         {/* Interactive Mockup */}
-        <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-[0_12px_40px_-12px_rgba(162,153,175,0.15)] border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
-          
-          <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
-             {/* Simulated Notch */}
-             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-6 bg-white/5 backdrop-blur-md rounded-b-xl max-w-[120px] z-50 mx-auto pointer-events-none border border-white/10 border-t-0"></div>
+        <div className="relative flex items-center justify-center w-full max-w-[320px]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#a299af]/20 rounded-full blur-[80px]" />
+          <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
+            
+            <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
+             {/* Browser Header (Circle Demo) */}
+             <div className="w-full bg-[#1A1A1A] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-white/5">
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-[#0c0e0b] rounded-b-xl max-w-[120px] pointer-events-none"></div>
+               <div className="w-full bg-white/5 rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
+                 <Lock className="w-2 h-2 text-white/40 mr-1.5" />
+                 <span className="text-[9px] text-white/60 font-medium tracking-wide">rifelo.id/c/rifelo</span>
+               </div>
+             </div>
 
              <AnimatePresence mode="wait">
                {circleView === 'public' ? (
@@ -291,7 +299,7 @@ export default function LandingPage() {
                    animate={{ opacity: 1 }}
                    exit={{ opacity: 0 }}
                    transition={{ duration: 0.3 }}
-                   className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 pt-10 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
+                   className="flex-1 w-full relative flex flex-col items-center justify-center text-center p-6 bg-[#0c0e0b] overflow-y-auto scrollbar-hide"
                  >
                     {/* Active Resonance Glow effect (Shared with member view for visual sync) */}
                     <AnimatePresence>
@@ -439,7 +447,7 @@ export default function LandingPage() {
                    animate={{ opacity: 1 }}
                    exit={{ opacity: 0 }}
                    transition={{ duration: 0.3 }}
-                   className="absolute inset-0 flex flex-col items-center justify-center text-center bg-[#0c0e0b] text-white overflow-hidden"
+                   className="flex-1 w-full relative flex flex-col items-center justify-center text-center bg-[#0c0e0b] text-white overflow-hidden"
                  >
                     {/* Active Resonance Glow effect */}
                     <AnimatePresence>
@@ -460,7 +468,7 @@ export default function LandingPage() {
                     </AnimatePresence>
 
                     {/* Top Navigation */}
-                    <div className="absolute top-0 left-0 right-0 p-6 pt-10 flex justify-between items-center z-50">
+                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
                       <div className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer">
                         <ArrowRight className="w-4 h-4 rotate-180" />
                         <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
@@ -475,7 +483,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Visualization Hub */}
-                    <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mt-8">
+                    <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 mb-12">
                       <motion.div
                         animate={{ 
                           rotate: 360,
@@ -547,13 +555,13 @@ export default function LandingPage() {
                     </div>
 
                     {/* Bottom Status (Absolute) */}
-                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                    <div className="absolute bottom-20 left-0 right-0 text-center pointer-events-none">
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="inline-flex flex-col items-center"
                       >
-                        <div className="text-xl font-bold tracking-widest uppercase mb-2">
+                        <div className="text-xl font-bold tracking-widest uppercase mb-1">
                           rifelo
                         </div>
                         <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">
@@ -564,7 +572,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Small Resonance CTA */}
-                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50">
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
                       <button 
                         onClick={handleResonanceDemo}
                         disabled={resonanceStatus === 'activating' || resonanceStatus === 'merged'}
@@ -581,6 +589,7 @@ export default function LandingPage() {
                )}
              </AnimatePresence>
           </div>
+        </div>
         </div>
       </section>
 
@@ -631,12 +640,18 @@ export default function LandingPage() {
               className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden"
             >
               {/* Screen Content */}
-              <div className="w-full h-full bg-slate-50 rounded-[2rem] overflow-y-auto overflow-x-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
-                {/* Simulated Notch */}
-                <div className="sticky top-0 left-1/2 -translate-x-1/2 w-[40%] h-6 bg-white rounded-b-xl max-w-[120px] z-50 mb-4 mx-auto"></div>
+              <div className="w-full h-full bg-slate-50 rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 scrollbar-hide">
+                {/* Browser Header (Identity Demo) */}
+                <div className="w-full bg-[#f8f9fa] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-[#aaafbc]/20">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-white rounded-b-xl max-w-[120px] pointer-events-none"></div>
+                  <div className="w-full bg-white rounded-md py-1 flex items-center justify-center mt-1 border border-[#aaafbc]/10 shadow-sm">
+                    <Lock className="w-2 h-2 text-[#aaafbc] mr-1.5" />
+                    <span className="text-[9px] text-[#0c0e0b]/70 font-medium tracking-wide">rifelo.id/u/alexcarter</span>
+                  </div>
+                </div>
                 
                 {/* Public Profile Lookalike */}
-                <div className="px-5 pb-6 flex flex-col gap-6 font-sans">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 flex flex-col gap-6 font-sans scrollbar-hide">
                   {/* Header */}
                   <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">Alex Carter</h1>

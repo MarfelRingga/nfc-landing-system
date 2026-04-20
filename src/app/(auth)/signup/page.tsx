@@ -11,11 +11,14 @@ import { formatIndonesianPhoneNumber } from '@/lib/phone';
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/profile';
+  const claimToken = searchParams.get('claimToken');
+  const redirectParamsUrl = searchParams.get('redirect');
+  const redirectUrl = redirectParamsUrl || '/profile';
 
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [nfcTagCode, setNfcTagCode] = useState(claimToken || '');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +54,13 @@ function SignupForm() {
       if (data.user) {
         setSuccess(true);
         // Supabase might require phone verification depending on settings
-        // If auto-confirm is on, we can redirect
+        // For new tag code, overwrite redirect if not coming from claim but they entered one
+        const finalRedirectUrl = (nfcTagCode && !claimToken && redirectUrl === '/profile') 
+          ? `/tags?claim=${nfcTagCode}` 
+          : redirectUrl;
+
         setTimeout(() => {
-          router.push(redirectUrl);
+          router.push(finalRedirectUrl);
         }, 3000);
       }
     } catch (err: any) {
@@ -155,6 +162,28 @@ function SignupForm() {
                   <EyeOff className="h-5 w-5" aria-hidden="true" />
                 )}
               </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="nfcTagCode" className="block text-sm font-medium text-[#0c0e0b]">
+              NFC Tag Code
+            </label>
+            <div className="mt-2">
+              <input
+                id="nfcTagCode"
+                name="nfcTagCode"
+                type="text"
+                required
+                disabled={!!claimToken}
+                value={nfcTagCode}
+                onChange={(e) => setNfcTagCode(e.target.value)}
+                className={`block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 px-4 ${claimToken ? 'bg-[#aaafbc]/20 text-[#0c0e0b]/60 cursor-not-allowed' : 'bg-[#F4F3EE]/50'}`}
+                placeholder="Enter your tag code"
+              />
+              {claimToken && (
+                <p className="mt-2 text-xs text-emerald-600 font-medium">Tag code automatically filled from your scan.</p>
+              )}
             </div>
           </div>
 
