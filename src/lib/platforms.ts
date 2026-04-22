@@ -1,13 +1,13 @@
 import { 
-  Instagram,
-  Twitter,
-  Facebook,
-  Linkedin,
-  Github,
-  Youtube,
-  MessageCircle,
-  Send,
-  Music2
+  Instagram as InstagramIcon,
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  Linkedin as LinkedinIcon,
+  Github as GithubIcon,
+  Youtube as YoutubeIcon,
+  MessageCircle as MessageCircleIcon,
+  Send as SendIcon,
+  Music2 as MusicIcon
 } from 'lucide-react';
 
 export const getPlatformInfo = (title: string, url: string) => {
@@ -18,7 +18,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'instagram',
       match: ['instagram'], 
-      icon: Instagram, 
+      icon: InstagramIcon, 
       color: 'text-pink-600', 
       baseUrl: 'https://instagram.com/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '')
@@ -26,7 +26,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'twitter',
       match: ['twitter', 'x.com'], 
-      icon: Twitter, 
+      icon: TwitterIcon, 
       color: 'text-slate-900', 
       baseUrl: lowerUrl.includes('x.com') ? 'https://x.com/' : 'https://twitter.com/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, '').replace(/\/$/, '')
@@ -34,7 +34,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'facebook',
       match: ['facebook'], 
-      icon: Facebook, 
+      icon: FacebookIcon, 
       color: 'text-blue-600', 
       baseUrl: 'https://facebook.com/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?facebook\.com\//, '').replace(/\/$/, '')
@@ -42,7 +42,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'linkedin',
       match: ['linkedin'], 
-      icon: Linkedin, 
+      icon: LinkedinIcon, 
       color: 'text-blue-700', 
       baseUrl: 'https://linkedin.com/in/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, '')
@@ -50,7 +50,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'github',
       match: ['github'], 
-      icon: Github, 
+      icon: GithubIcon, 
       color: 'text-slate-900', 
       baseUrl: 'https://github.com/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/$/, '')
@@ -58,7 +58,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'youtube',
       match: ['youtube'], 
-      icon: Youtube, 
+      icon: YoutubeIcon, 
       color: 'text-red-600', 
       baseUrl: 'https://youtube.com/@',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?youtube\.com\/(@)?/, '').replace(/\/$/, '')
@@ -66,7 +66,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'whatsapp',
       match: ['whatsapp', 'wa.me'], 
-      icon: MessageCircle, 
+      icon: MessageCircleIcon, 
       color: 'text-emerald-500', 
       baseUrl: 'https://wa.me/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?wa\.me\//, '').replace(/\/$/, '')
@@ -74,7 +74,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'telegram',
       match: ['telegram', 't.me'], 
-      icon: Send, 
+      icon: SendIcon, 
       color: 'text-blue-500', 
       baseUrl: 'https://t.me/',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?t\.me\//, '').replace(/\/$/, '')
@@ -82,7 +82,7 @@ export const getPlatformInfo = (title: string, url: string) => {
     { 
       id: 'tiktok',
       match: ['tiktok'], 
-      icon: Music2, 
+      icon: MusicIcon, 
       color: 'text-slate-900', 
       baseUrl: 'https://tiktok.com/@',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?tiktok\.com\/(@)?/, '').replace(/\/$/, '')

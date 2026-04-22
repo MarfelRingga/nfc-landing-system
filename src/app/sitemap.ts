@@ -7,6 +7,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
     },
     {
+      url: 'https://rifelo.id/rifelo',
+      lastModified: new Date(),
+    },
+    {
       url: 'https://rifelo.id/what-is-rifelo',
       lastModified: new Date(),
     },
@@ -16,6 +20,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: 'https://rifelo.id/join-rifelo',
+      lastModified: new Date(),
+    },
+    {
+      url: 'https://rifelo.id/privacy',
+      lastModified: new Date(),
+    },
+    {
+      url: 'https://rifelo.id/terms',
       lastModified: new Date(),
     },
   ]

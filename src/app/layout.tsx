@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { PWAInstall } from "@/components/PWAInstall";
 
 const headingFont = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -17,13 +18,14 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#0c0e0b",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://rifelo.id'),
-  title: "Rifelo — Platform Profil Interaktif Real-Time",
-  description: "The silent anchor of your professional identity. A matte silicone masterpiece for the modern era.",
-  keywords: ["NFC", "Digital Business Card", "Smart Tag", "Landing Page", "Rifelo", "Identity Management", "Interactive Profile"],
+  title: "Rifelo - NFC Digital Profile Platform",
+  description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
+  keywords: ["NFC", "Digital Profile", "Technology Platform", "Smart Tag", "Rifelo", "Identity Management", "Interactive Profile"],
   authors: [{ name: "Rifelo Team" }],
   robots: "index, follow",
   alternates: {
@@ -37,19 +39,19 @@ export const metadata: Metadata = {
       { url: 'https://i.ibb.co.com/20WNbGMp/favicon-192x192.png', type: 'image/png' },
     ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.webmanifest',
   openGraph: {
-    title: "Rifelo — Platform Profil Interaktif Real-Time",
-    description: "Connect physical tags to digital experiences instantly.",
+    title: "Rifelo - NFC Digital Profile Platform",
+    description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
     url: 'https://rifelo.id',
     type: "website",
-    locale: "id_ID",
+    locale: "en_US",
     siteName: "Rifelo",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rifelo — Platform Profil Interaktif Real-Time",
-    description: "Connect physical tags to digital experiences instantly.",
+    title: "Rifelo - NFC Digital Profile Platform",
+    description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
   },
 };
 
@@ -73,7 +75,10 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body antialiased">
+        <PWAInstall />
+        {children}
+      </body>
     </html>
   );
 }

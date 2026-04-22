@@ -88,20 +88,27 @@ export default function AdminUsersPage() {
     setErrorMessage(null);
 
     try {
-      // Generate a 6-digit code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      const { error } = await supabase
-        .from('reset_codes')
-        .insert({
-          phone: resetCodeInfo.phone,
-          secret_code: code,
-          is_used: false
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expired. Please login again.');
 
-      if (error) throw error;
+      const response = await fetch('/api/admin/generate-reset-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          phone: resetCodeInfo.phone
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate reset code');
+      }
       
-      setGeneratedCode(code);
+      setGeneratedCode(data.code);
     } catch (err: any) {
       console.error('Error generating reset code:', err);
       setErrorMessage(err.message || 'Failed to generate reset code');

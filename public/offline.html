@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Rifelo | Offline</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #F4F3EE;
+      color: #0c0e0b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .wrapper {
+      padding: 2rem;
+      max-width: 400px;
+    }
+    .logo {
+      font-weight: 900;
+      font-size: 2rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    p {
+      color: #555;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    button {
+      background-color: #1A1A1A;
+      color: #fff;
+      border: none;
+      padding: 0.875rem 2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background-color: #000;
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo">RIFELO</div>
+    <h1>Koneksi Terputus</h1>
+    <p>Sepertinya Anda sedang offline. Silakan periksa koneksi internet Anda untuk menggunakan seluruh fitur Rifelo.</p>
+    <button onclick="window.location.reload()">Coba Muat Ulang</button>
+  </div>
+</body>
+</html>

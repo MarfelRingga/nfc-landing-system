@@ -14,7 +14,8 @@ import {
   Lock,
   Briefcase,
   Mail,
-  Globe
+  Globe,
+  MessageCircle
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -29,16 +30,13 @@ export default function LandingPage() {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "Organization",
     "name": "Rifelo",
-    "applicationCategory": "SocialNetworkingApplication",
-    "operatingSystem": "Any",
-    "description": "Platform Profil Interaktif Real-Time. The silent anchor of your professional identity. Connect physical tags to digital experiences.",
     "url": "https://rifelo.id",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Rifelo"
-    }
+    "sameAs": [
+      "https://instagram.com/rifelo.id"
+    ],
+    "description": "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id."
   };
 
   const handleResonanceDemo = async () => {
@@ -116,14 +114,14 @@ export default function LandingPage() {
   }, [isConnected]);
 
   return (
-    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col">
+    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col overflow-x-hidden w-full relative">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       
       {/* 1. Navbar (Minimalist) */}
-      <nav className="w-full flex items-center justify-between py-6 px-6 md:px-12 max-w-7xl mx-auto z-50">
+      <nav className="w-full flex items-center justify-between py-6 px-4 md:px-12 max-w-7xl mx-auto z-50">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
             <img 
@@ -152,11 +150,11 @@ export default function LandingPage() {
       </nav>
 
       {/* 2. Hero Section */}
-      <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden w-full">
+      <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden w-full py-12 md:py-0">
         {/* Subtle background glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-[#a299af]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto px-4 relative z-10 w-full -mt-16 sm:-mt-24">
+        <div className="max-w-5xl mx-auto px-4 relative z-10 w-full pt-8 sm:pt-0">
           <motion.div 
             layout
             className="flex flex-row items-center justify-center w-full relative gap-4 md:gap-8"
@@ -182,7 +180,7 @@ export default function LandingPage() {
                   opacity: isConnected ? 1 : 0.8
                 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="relative z-10 shrink-0 flex items-center justify-center w-[35vw] max-w-[140px] md:w-full md:max-w-[200px] aspect-[4/5] pointer-events-auto"
+                className="relative z-10 shrink-0 flex items-center justify-center w-[35vw] max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px] aspect-[4/5] pointer-events-auto"
               >
                 <Image
                   src="https://i.ibb.co.com/vvsX17bc/wristband.png"
@@ -232,7 +230,7 @@ export default function LandingPage() {
                   x: { delay: 0.6, duration: 1.2, times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], ease: "easeInOut" },
                   rotate: { delay: 0.6, duration: 1.2, times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], ease: "easeInOut" }
                 }}
-                className="relative z-30 shrink-0 flex items-center justify-center w-[45vw] max-w-[180px] md:w-full md:max-w-[260px] aspect-[1/2] pointer-events-auto"
+                className="relative z-30 shrink-0 flex items-center justify-center w-[45vw] max-w-[170px] sm:max-w-[200px] md:max-w-[240px] lg:max-w-[260px] aspect-[1/2] pointer-events-auto"
               >
                 <Image
                   src="https://i.ibb.co.com/JRyHX9JW/phone.png"
@@ -245,6 +243,36 @@ export default function LandingPage() {
               </motion.div>
             </div>
           </motion.div>
+
+          {/* Hero Definition (SEO) */}
+          <div className="flex flex-col items-center justify-center text-center max-w-2xl mx-auto space-y-4 pt-12 sm:pt-16 md:pt-20 lg:pt-24 shrink-0 px-2 lg:px-0">
+            <motion.h1 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.8 }}
+              className="font-semibold tracking-tight text-[#0c0e0b] leading-tight flex flex-col items-center justify-center w-full"
+            >
+              <span className="text-[28px] min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 lg:mb-2">Rifelo &mdash;</span>
+              <span className="text-[#0c0e0b]/30 text-[26px] min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl">NFC Digital Profile Platform.</span>
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-[#0c0e0b]/60 max-w-lg mx-auto leading-relaxed text-sm sm:text-base font-medium"
+            >
+              Rifelo is an NFC technology platform that connects physical smart tags to seamless digital profiles.
+            </motion.p>
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="text-[10px] text-[#0c0e0b]/30 uppercase tracking-widest font-semibold"
+            >
+              Engineered for intelligent networking and interactions.
+            </motion.p>
+          </div>
 
           {/* Scroll Hint */}
           <div className="py-4 flex items-center justify-center mt-4">
@@ -271,7 +299,7 @@ export default function LandingPage() {
       </main>
 
       {/* 2.5. Circle Demo Section */}
-      <section id="circle-demo-section" className="min-h-screen flex flex-col items-center justify-center pt-8 pb-12 px-4 sm:px-6 w-full relative z-10 bg-[#F4F3EE]">
+      <section id="circle-demo-section" className="min-h-screen flex flex-col items-center justify-center py-16 md:py-24 px-4 sm:px-6 md:px-12 w-full relative z-10 bg-[#F4F3EE]">
 
         {/* View Switcher */}
         <div className="flex bg-white p-[4px] rounded-full relative w-[280px] h-[44px] mb-8 shadow-md border border-[#aaafbc]/20 shrink-0">
@@ -434,7 +462,7 @@ export default function LandingPage() {
                       <div className="w-full flex flex-col items-center gap-2 mb-6 shrink-0">
                         {[0, 1, 2, 3, 4, 5].map((i) => {
                             const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                            const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+                            const names = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
                             const isActive = activeIndexes.includes(i);
                             const color = colors[i];
                             
@@ -523,7 +551,7 @@ export default function LandingPage() {
                             const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
                             const color = colors[i];
                             const isActive = activeIndexes.includes(i);
-                            const names = ['You', 'Alex Carter', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+                            const names = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
                             
                             return (
                               <div
@@ -615,11 +643,11 @@ export default function LandingPage() {
           {/* Text Description Container */}
           <div className="text-center lg:text-left max-w-xl flex flex-col items-center lg:items-start px-4 shrink-0">
             <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center lg:items-start">
-              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Your Dynamic Circle,</span>
-              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-[#0c0e0b]/50">Live & Synchronized.</span>
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Your Rifelo Digital Profile,</span>
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl text-[#0c0e0b]/50">Synchronized & Alive.</span>
             </h2>
             <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8">
-              Ketahui siapa saja yang sedang aktif dan hadir di sekeliling Anda secara instan. Fitur Circle menghubungkan anggota secara visual tanpa batas waktu. Interaktif, mulus, dan hidup layaknya di dunia nyata.
+              Seamlessly connect and interact with other Rifelo users in real time. Whether at networking events or daily meetings, know who is actively present and break the ice instantly.
             </p>
             <Link 
               href="/join-rifelo"
@@ -633,16 +661,16 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Demo Section */}
-      <section id="demo-section" className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full relative z-10">
+      <section id="demo-section" className="py-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left Text */}
           <div className="order-2 lg:order-1 flex flex-col items-start text-left max-w-lg mx-auto lg:mx-0">
             <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-6 leading-tight flex flex-col">
-              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Your Professional Identity,</span>
-              <span className="text-[#0c0e0b]/50 mt-1 text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Instantly Shared.</span>
+              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Rifelo NFC Technology:</span>
+              <span className="text-[#0c0e0b]/50 mt-1 text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">Identity, Instantly Shared.</span>
             </h2>
             <p className="text-[#0c0e0b]/70 leading-relaxed mb-8">
-              Satu sentuhan sederhana pada gelang RIFELO ke smartphone apa pun, dan profil digital Anda langsung terbuka tanpa memerlukan aplikasi tambahan. Elegan, instan, dan selalu siap sedia.
+              A simple tap of your Rifelo NFC smart tag to any smartphone opens your interactive digital profile instantly. No extra apps needed. Fast, elegant, and always ready for your next professional encounter.
             </p>
             <ul className="space-y-4 mb-8 w-full">
               {[
@@ -686,7 +714,7 @@ export default function LandingPage() {
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-white rounded-b-xl max-w-[120px] pointer-events-none"></div>
                   <div className="w-full bg-white rounded-md py-1 flex items-center justify-center mt-1 border border-[#aaafbc]/10 shadow-sm">
                     <Lock className="w-2 h-2 text-[#aaafbc] mr-1.5" />
-                    <span className="text-[9px] text-[#0c0e0b]/70 font-medium tracking-wide">rifelo.id/u/alexcarter</span>
+                    <span className="text-[9px] text-[#0c0e0b]/70 font-medium tracking-wide">rifelo.id/u/marfel</span>
                   </div>
                 </div>
                 
@@ -694,28 +722,16 @@ export default function LandingPage() {
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 flex flex-col gap-6 font-sans scrollbar-hide">
                   {/* Header */}
                   <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Alex Carter</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Marfel Ringga P</h1>
                     <p className="text-xs text-slate-500 mt-1">
-                      Senior Designer at RIFELO
+                      Founder at rifelo
                     </p>
                   </div>
                   
                   {/* Bio */}
                   <div className="space-y-2">
                     <h2 className="text-[10px] font-semibold text-slate-900 uppercase tracking-wider">About</h2>
-                    <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">I create seamless digital experiences bridging physical and virtual worlds. Passionate about minimalist design.</p>
-                  </div>
-                  
-                  {/* Details */}
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center text-slate-600 bg-white shadow-sm p-3 rounded-xl border border-slate-100">
-                      <Briefcase className="w-4 h-4 mr-3 text-slate-400 shrink-0" />
-                      <span className="truncate text-[11px] font-medium text-slate-700">RIFELO</span>
-                    </div>
-                    <div className="flex items-center text-slate-600 bg-white shadow-sm p-3 rounded-xl border border-slate-100">
-                      <Mail className="w-4 h-4 mr-3 text-slate-400 shrink-0" />
-                      <span className="truncate text-[11px] font-medium text-slate-700">alex@rifelo.com</span>
-                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">Turning everyday interactions into seamless NFC experiences.</p>
                   </div>
                   
                   {/* Links */}
@@ -732,7 +748,7 @@ export default function LandingPage() {
                           </div>
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-900 text-[11px]">Instagram</span>
-                            <span className="text-[9px] text-slate-500">@alexcarter</span>
+                            <span className="text-[9px] text-slate-500">@rifelo.id</span>
                           </div>
                         </div>
                         <ArrowRight className="w-3 h-3 text-slate-300" />
@@ -741,14 +757,14 @@ export default function LandingPage() {
                       {/* Link 2 */}
                       <div className="flex items-center justify-between p-3 bg-white shadow-sm border border-slate-100 rounded-xl">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mr-3 text-[#0077b5]">
+                          <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mr-3 text-[#E1306C]">
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.88z"/>
                             </svg>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 text-[11px]">LinkedIn</span>
-                            <span className="text-[9px] text-slate-500">Alex Carter</span>
+                            <span className="font-bold text-slate-900 text-[11px]">Instagram</span>
+                            <span className="text-[9px] text-slate-500">@marfel_ringga</span>
                           </div>
                         </div>
                         <ArrowRight className="w-3 h-3 text-slate-300" />
@@ -757,12 +773,26 @@ export default function LandingPage() {
                       {/* Link 3 */}
                       <div className="flex items-center justify-between p-3 bg-white shadow-sm border border-slate-100 rounded-xl">
                         <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mr-3 text-emerald-500">
+                            <MessageCircle className="w-4 h-4" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 text-[11px]">WhatsApp</span>
+                            <span className="text-[9px] text-slate-500">628xxxxxxxxx</span>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-3 h-3 text-slate-300" />
+                      </div>
+
+                      {/* Link 4 */}
+                      <div className="flex items-center justify-between p-3 bg-white shadow-sm border border-slate-100 rounded-xl">
+                        <div className="flex items-center">
                           <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mr-3 text-slate-600">
                             <Globe className="w-4 h-4" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 text-[11px]">Portfolio</span>
-                            <span className="text-[9px] text-slate-500">alexcarter.design</span>
+                            <span className="font-bold text-slate-900 text-[11px]">Website</span>
+                            <span className="text-[9px] text-slate-500">rifelo.id</span>
                           </div>
                         </div>
                         <ArrowRight className="w-3 h-3 text-slate-300" />
@@ -777,11 +807,11 @@ export default function LandingPage() {
       </section>
 
       {/* 4. Value Proposition (Bento Grid Lite) */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
+      <section className="py-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1 */}
           <div 
-            className="group relative bg-white rounded-3xl p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
+            className="group relative bg-white rounded-3xl p-6 lg:p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#a299af]/0 to-[#a299af]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <h3 className="text-xl font-semibold text-[#0c0e0b] mb-3">Ultra-Lightweight</h3>
@@ -792,7 +822,7 @@ export default function LandingPage() {
 
           {/* Card 2 */}
           <div 
-            className="group relative bg-white rounded-3xl p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
+            className="group relative bg-white rounded-3xl p-6 lg:p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#a299af]/0 to-[#a299af]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <h3 className="text-xl font-semibold text-[#0c0e0b] mb-3">Smooth</h3>
@@ -803,7 +833,7 @@ export default function LandingPage() {
 
           {/* Card 3 */}
           <div 
-            className="group relative bg-white rounded-3xl p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
+            className="group relative bg-white rounded-3xl p-6 lg:p-8 border border-[#aaafbc]/30 shadow-sm hover:shadow-[0_12px_30px_-8px_rgba(162,153,175,0.2)] hover:border-[#a299af]/50 transition-all duration-300 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#a299af]/0 to-[#a299af]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <h3 className="text-xl font-semibold text-[#0c0e0b] mb-3">Perfectly Adjustable</h3>
@@ -815,7 +845,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. Footer (SEO Optimized) */}
-      <footer className="pt-20 pb-10 px-6 md:px-12 border-t border-[#aaafbc]/20 mt-auto bg-white">
+      <footer className="pt-16 md:pt-24 pb-10 px-4 sm:px-6 md:px-12 border-t border-[#aaafbc]/20 mt-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 mb-16">
             {/* Brand & SEO Text */}
@@ -831,7 +861,7 @@ export default function LandingPage() {
                 <span className="font-semibold text-xl tracking-tight text-[#0c0e0b]">rifelo</span>
               </Link>
               <p className="text-sm text-[#0c0e0b]/60 leading-relaxed mb-6 pe-4">
-                The premium NFC wristband and digital ecosystem for smart event management, seamless check-ins, and interactive guest experiences.
+                Rifelo is an NFC-powered technology platform enabling seamless digital profiles for modern networking and smart events.
               </p>
             </div>
 
@@ -849,7 +879,7 @@ export default function LandingPage() {
             <div className="md:col-span-2 lg:col-span-2">
               <h4 className="font-semibold text-[#0c0e0b] mb-5 text-xs tracking-widest uppercase">Perusahaan</h4>
               <ul className="space-y-4 text-sm text-[#0c0e0b]/60">
-                <li><Link href="/" className="hover:text-[#0c0e0b] transition-colors">Beranda</Link></li>
+                <li><Link href="/rifelo" className="hover:text-[#0c0e0b] transition-colors">Tentang Kami</Link></li>
                 <li><Link href="/signup" className="hover:text-[#0c0e0b] transition-colors">Daftar</Link></li>
                 <li><Link href="/login" className="hover:text-[#0c0e0b] transition-colors">Masuk</Link></li>
                 <li><Link href={contactLink} className="hover:text-[#0c0e0b] transition-colors">Hubungi Kami</Link></li>
@@ -868,7 +898,7 @@ export default function LandingPage() {
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-[#aaafbc]/20 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#0c0e0b]/40 font-medium">
-            <p>© {new Date().getFullYear()} rifelo Inc. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Rifelo Inc. All rights reserved.</p>
             <div className="flex flex-wrap gap-4 sm:gap-6 justify-center">
               {globalLinks.length > 0 ? (
                 globalLinks.filter(l => l.is_visible !== false).map((link) => (
@@ -884,9 +914,7 @@ export default function LandingPage() {
                 ))
               ) : (
                 <>
-                  <Link href="#" className="hover:text-[#0c0e0b] transition-colors">Twitter (X)</Link>
-                  <Link href="#" className="hover:text-[#0c0e0b] transition-colors">Instagram</Link>
-                  <Link href="#" className="hover:text-[#0c0e0b] transition-colors">LinkedIn</Link>
+                  <a href="https://instagram.com/rifelo.id" target="_blank" rel="noopener noreferrer" className="hover:text-[#0c0e0b] transition-colors">Instagram</a>
                 </>
               )}
             </div>
