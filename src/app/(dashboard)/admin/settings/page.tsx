@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, Globe } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, Globe, Database } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getPlatformInfo } from '@/lib/platforms';
@@ -31,7 +31,11 @@ export default function AdminSettingsPage() {
         const { data, error } = await supabase
           .from('app_settings')
           .select('id, value')
-          .in('id', ['contact_support_link', 'get_yours_now_link', 'global_platforms_links']);
+          .in('id', [
+            'contact_support_link', 
+            'get_yours_now_link', 
+            'global_platforms_links'
+          ]);
 
         if (error) {
           if (error.code === '42P01' || error.message?.includes('app_settings')) {

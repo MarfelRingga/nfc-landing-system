@@ -13,6 +13,7 @@ import {
 import MessageForm from './MessageForm';
 import { getPlatformInfo } from '@/lib/platforms';
 import CircleRealtimeView from './CircleRealtimeView';
+import Link from 'next/link';
 
 export const revalidate = 60; // Cache for 60 seconds (ISR)
 
@@ -71,12 +72,12 @@ export default async function PublicProfilePage({ params, searchParams }: { para
           </div>
           <h1 className="text-2xl font-bold text-[#0c0e0b]">Profile is Private</h1>
           <p className="text-[#aaafbc]">This user has chosen to keep their profile private.</p>
-          <a 
+          <Link  
             href="/"
             className="inline-block mt-6 text-sm font-bold text-[#0c0e0b] hover:underline"
           >
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     );

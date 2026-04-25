@@ -23,9 +23,9 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://rifelo.id'),
-  title: "Rifelo - NFC Digital Profile Platform",
-  description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
-  keywords: ["NFC", "Digital Profile", "Technology Platform", "Smart Tag", "Rifelo", "Identity Management", "Interactive Profile"],
+  title: "Rifelo - Your Identity, Instantly Shared",
+  description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",
+  keywords: ["Digital Identity", "NFC", "Contact Sharing", "Networking", "Rifelo", "Social Profile"],
   authors: [{ name: "Rifelo Team" }],
   robots: "index, follow",
   alternates: {
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   openGraph: {
-    title: "Rifelo - NFC Digital Profile Platform",
-    description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
+    title: "Rifelo - Your Identity, Instantly Shared",
+    description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",
     url: 'https://rifelo.id',
     type: "website",
     locale: "en_US",
@@ -50,8 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rifelo - NFC Digital Profile Platform",
-    description: "Rifelo is an NFC technology platform connecting smart tags to digital profiles. Instantly share your identity for networking and smart events on rifelo.id.",
+    title: "Rifelo - Your Identity, Instantly Shared",
+    description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",
   },
 };
 
