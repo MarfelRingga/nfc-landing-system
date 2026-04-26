@@ -22,10 +22,22 @@ jobs:
           sudo apt-get install -y postgresql-client-17
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      - name: Setup rclone config
+      - name: Setup RClone with Service Account
         run: |
-          mkdir -p ~/.config/rclone/
-          echo "${{ secrets.RCLONE_CONFIG_DATA || secrets.RCLONE_CONFIG_CONTENT }}" > ~/.config/rclone/rclone.conf
+          mkdir -p ~/.config/rclone
+
+          cat <<EOF > ~/.config/rclone/rclone.conf
+          [gdrive]
+          type = drive
+          scope = drive
+          service_account_file = /tmp/service-account.json
+          EOF
+
+          echo '${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}' > /tmp/service-account.json
+
+      - name: Check rclone config
+        run: |
+          cat ~/.config/rclone/rclone.conf
 
       - name: Run backup script
         env:
