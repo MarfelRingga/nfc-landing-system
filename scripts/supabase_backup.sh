@@ -67,14 +67,20 @@ log_to_supabase() {
 # Helper to send Telegram notification
 notify_telegram() {
     local message=$1
+    local is_success=${2:-0}
     
     # Escape HTML special characters to prevent Telegram parsing errors
     message="${message//&/&amp;}"
     message="${message//</&lt;}"
     message="${message//>/&gt;}"
     
+    local header="🚨 <b>Supabase Backup Alert</b>"
+    if [ "$is_success" -eq 1 ]; then
+        header="✅ <b>Supabase Backup Success</b>"
+    fi
+    
     # Use HTML parse mode to avoid markdown parsing errors with special characters
-    local escaped_message="🚨 <b>Supabase Backup Alert</b>
+    local escaped_message="$header
 
 <code>$message</code>"
     
@@ -128,15 +134,25 @@ if [ $RCLONE_EXIT -ne 0 ]; then
     # Take the last few lines of the output for the error message
     # And remove the timestamp prefix to make it cleaner
     TAIL_OUTPUT=$(echo "$RCLONE_OUTPUT" | tail -n 5 | sed 's/^[0-9\/ :]*//')
-    ERR="rclone upload failed. Check GitHub Action logs for details."
-    [ ! -z "$TAIL_OUTPUT" ] && ERR="rclone upload failed.\n\n$TAIL_OUTPUT"
+    ERR="rclone upload failed."
+    if [ ! -z "$TAIL_OUTPUT" ]; then
+        ERR="rclone upload failed.
+
+$TAIL_OUTPUT"
+    fi
     
     log_to_supabase "failed" $FILE_SIZE "$ERR" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    notify_telegram "$ERR"
+    notify_telegram "$ERR" 0
     exit 1
 fi
 
 # 5. Success
 echo "Backup successful!"
+SIZE_KB=$((FILE_SIZE / 1024))
+SUCCESS_MSG="Database backup uploaded successfully!
+File: $BACKUP_NAME
+Size: ${SIZE_KB} KB"
+
 log_to_supabase "success" $FILE_SIZE "" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+notify_telegram "$SUCCESS_MSG" 1
 rm "$LOCAL_FILE" # Optional: cleanup local file
