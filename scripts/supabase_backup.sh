@@ -81,6 +81,9 @@ log_to_supabase "running" 0 "" ""
 
 # 2. Start Backup (pg_dump)
 echo "Starting pg_dump..."
+# Ensure that we use the PostgreSQL 17 version of pg_dump installed
+export PATH="/usr/lib/postgresql/17/bin:$PATH"
+
 # Force pg_dump to use the connection string as a single argument
 # We also ensure the environment variables for PG specifically are not conflicting
 PGSSLMODE=require pg_dump "$DB_URL" > "$LOCAL_FILE"
