@@ -23,35 +23,34 @@ jobs:
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
       - name: Setup RClone with Service Account
+        env:
+          SA_JSON: ${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p ~/.config/rclone
+          # Write SA JSON without any shell expansion
+          echo "$SA_JSON" > /tmp/sa.json
           
-          # Create Service Account JSON safely
-          cat << 'EOF' > /tmp/service-account.json
-          ${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}
-          EOF
-
-          # Create RClone config
-          # Using root_folder_id forces rclone to use the shared folder's quota
+          # Create rclone.conf WITHOUT leading indentation (CRITICAL for INI format)
           cat <<EOF > ~/.config/rclone/rclone.conf
-          [gdrive]
-          type = drive
-          scope = drive
-          service_account_file = /tmp/service-account.json
-          root_folder_id = ${{ secrets.RCLONE_GDRIVE_FOLDER_ID }}
-          EOF
+[gdrive]
+type = drive
+scope = drive
+service_account_file = /tmp/sa.json
+root_folder_id = ${{ secrets.RCLONE_GDRIVE_FOLDER_ID }}
+EOF
+          chmod 600 ~/.config/rclone/rclone.conf
 
-      - name: Verify RClone Setup
+      - name: Verify Setup
         run: |
-          echo "RClone Version:"
-          rclone version
+          echo "Validating JSON with jq..."
+          jq .client_email /tmp/sa.json
           echo "List Current Remotes:"
           rclone listremotes
           
-      - name: Test Connection to Shared Folder
+      - name: Test Connection
         run: |
-          echo "Listing the shared folder (checking accessibility)..."
-          rclone lsd gdrive: -v
+          echo "Checking shared folder access..."
+          rclone about gdrive: || rclone lsd gdrive: -v
 
       - name: Run backup script
         env:
