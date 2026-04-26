@@ -22,7 +22,7 @@ jobs:
           sudo apt-get install -y postgresql-client-17
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      - name: Setup RClone with Service Account
+      - name: Setup RClone with Service Account & Shared Folder
         run: |
           mkdir -p ~/.config/rclone
 
@@ -31,13 +31,10 @@ jobs:
           type = drive
           scope = drive
           service_account_file = /tmp/service-account.json
+          root_folder_id = ${{ secrets.RCLONE_GDRIVE_FOLDER_ID }}
           EOF
 
           echo '${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}' > /tmp/service-account.json
-
-      - name: Check rclone config
-        run: |
-          cat ~/.config/rclone/rclone.conf
 
       - name: Run backup script
         env:
@@ -48,7 +45,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           BACKUP_LOCAL_PATH: "./backups"
           RCLONE_REMOTE_NAME: "gdrive"
-          RCLONE_DEST_PATH: "rifelo-backup"
+          RCLONE_DEST_PATH: "."
         run: |
           chmod +x ./scripts/supabase_backup.sh
           ./scripts/supabase_backup.sh
