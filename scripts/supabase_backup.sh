@@ -86,6 +86,7 @@ notify_telegram() {
 }
 
 # 1. Initialize Log
+# Manual push trigger: 2026-04-26
 log_to_supabase "running" 0 "" ""
 
 # 2. Start Backup (pg_dump)
