@@ -125,8 +125,10 @@ if [ $RCLONE_EXIT -ne 0 ]; then
     echo "$RCLONE_OUTPUT"
     
     # Take the last few lines of the output for the error message
-    TAIL_OUTPUT=$(echo "$RCLONE_OUTPUT" | tail -n 5)
-    ERR="rclone upload failed with exit code $RCLONE_EXIT.\nOutput:\n$TAIL_OUTPUT"
+    # And remove the timestamp prefix to make it cleaner
+    TAIL_OUTPUT=$(echo "$RCLONE_OUTPUT" | tail -n 5 | sed 's/^[0-9\/ :]*//')
+    ERR="rclone upload failed. Check GitHub Action logs for details."
+    [ ! -z "$TAIL_OUTPUT" ] && ERR="rclone upload failed.\n\n$TAIL_OUTPUT"
     
     log_to_supabase "failed" $FILE_SIZE "$ERR" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     notify_telegram "$ERR"
