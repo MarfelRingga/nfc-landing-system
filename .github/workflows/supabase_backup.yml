@@ -22,17 +22,29 @@ jobs:
           sudo apt-get install -y postgresql-client-17
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      - name: Setup rclone with OAuth
+      - name: Setup RClone with Service Account
         run: |
           mkdir -p ~/.config/rclone
-          # Menggunakan single-quoted EOF untuk mencegah ekspansi variabel shell
-          cat > ~/.config/rclone/rclone.conf <<'EOF'
-          ${{ secrets.RCLONE_CONFIG_CONTENT }}
+          # Create Service Account JSON
+          echo '${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}' > /tmp/service-account.json
+          # Create RClone config with root_folder_id to avoid quota error
+          cat <<EOF > ~/.config/rclone/rclone.conf
+          [gdrive]
+          type = drive
+          scope = drive
+          service_account_file = /tmp/service-account.json
+          root_folder_id = ${{ secrets.RCLONE_GDRIVE_FOLDER_ID }}
           EOF
-          chmod 600 ~/.config/rclone/rclone.conf
 
-      - name: Test RClone Connection
-        run: rclone lsd gdrive: -v
+      - name: Verify RClone Setup
+        run: |
+          rclone version
+          rclone listremotes
+          
+      - name: Test Connection to Shared Folder
+        run: |
+          echo "Listing root of shared folder..."
+          rclone lsd gdrive: -v
 
       - name: Run backup script
         env:
