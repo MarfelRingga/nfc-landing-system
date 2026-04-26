@@ -25,9 +25,14 @@ jobs:
       - name: Setup RClone with Service Account
         run: |
           mkdir -p ~/.config/rclone
-          # Create Service Account JSON
-          echo '${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}' > /tmp/service-account.json
-          # Create RClone config with root_folder_id to avoid quota error
+          
+          # Create Service Account JSON safely
+          cat << 'EOF' > /tmp/service-account.json
+          ${{ secrets.RCLONE_SERVICE_ACCOUNT_JSON }}
+          EOF
+
+          # Create RClone config
+          # Using root_folder_id forces rclone to use the shared folder's quota
           cat <<EOF > ~/.config/rclone/rclone.conf
           [gdrive]
           type = drive
@@ -38,12 +43,14 @@ jobs:
 
       - name: Verify RClone Setup
         run: |
+          echo "RClone Version:"
           rclone version
+          echo "List Current Remotes:"
           rclone listremotes
           
       - name: Test Connection to Shared Folder
         run: |
-          echo "Listing root of shared folder..."
+          echo "Listing the shared folder (checking accessibility)..."
           rclone lsd gdrive: -v
 
       - name: Run backup script
@@ -55,7 +62,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           BACKUP_LOCAL_PATH: "./backups"
           RCLONE_REMOTE_NAME: "gdrive"
-          RCLONE_DEST_PATH: "."
+          RCLONE_DEST_PATH: ""
         run: |
           chmod +x ./scripts/supabase_backup.sh
           ./scripts/supabase_backup.sh
