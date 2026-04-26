@@ -67,10 +67,13 @@ log_to_supabase() {
 # Helper to send Telegram notification
 notify_telegram() {
     local message=$1
+    # Use HTML parse mode to avoid markdown parsing errors with special characters
+    local escaped_message="🚨 <b>Supabase Backup Alert</b>\n\n<code>$message</code>"
+    
     curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
         -d "chat_id=$TELEGRAM_CHAT_ID" \
-        -d "text=🚨 Supabase Backup Alert: $message" \
-        -d "parse_mode=Markdown"
+        -d "text=$escaped_message" \
+        -d "parse_mode=HTML"
 }
 
 # 1. Initialize Log
@@ -78,7 +81,9 @@ log_to_supabase "running" 0 "" ""
 
 # 2. Start Backup (pg_dump)
 echo "Starting pg_dump..."
-pg_dump "$DB_URL" > "$LOCAL_FILE"
+# Force pg_dump to use the connection string as a single argument
+# We also ensure the environment variables for PG specifically are not conflicting
+PGSSLMODE=require pg_dump "$DB_URL" > "$LOCAL_FILE"
 PG_EXIT=$?
 
 if [ $PG_EXIT -ne 0 ]; then
