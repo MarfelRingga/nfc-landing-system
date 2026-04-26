@@ -67,12 +67,21 @@ log_to_supabase() {
 # Helper to send Telegram notification
 notify_telegram() {
     local message=$1
-    # Use HTML parse mode to avoid markdown parsing errors with special characters
-    local escaped_message="🚨 <b>Supabase Backup Alert</b>\n\n<code>$message</code>"
     
+    # Escape HTML special characters to prevent Telegram parsing errors
+    message="${message//&/&amp;}"
+    message="${message//</&lt;}"
+    message="${message//>/&gt;}"
+    
+    # Use HTML parse mode to avoid markdown parsing errors with special characters
+    local escaped_message="🚨 <b>Supabase Backup Alert</b>
+
+<code>$message</code>"
+    
+    # We use --data-urlencode so curl doesn't mangle newlines or special chars
     curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
         -d "chat_id=$TELEGRAM_CHAT_ID" \
-        -d "text=$escaped_message" \
+        --data-urlencode "text=$escaped_message" \
         -d "parse_mode=HTML"
 }
 
@@ -107,11 +116,18 @@ fi
 
 # 4. Upload to Google Drive (rclone)
 echo "Starting rclone upload..."
-rclone copy "$LOCAL_FILE" "$RCLONE_REMOTE_NAME:$RCLONE_DEST_PATH"
+# Run rclone with verbose logging and capture both stdout and stderr
+RCLONE_OUTPUT=$(rclone copy -v "$LOCAL_FILE" "$RCLONE_REMOTE_NAME:$RCLONE_DEST_PATH" 2>&1)
 RCLONE_EXIT=$?
 
 if [ $RCLONE_EXIT -ne 0 ]; then
-    ERR="rclone upload failed with exit code $RCLONE_EXIT"
+    echo "rclone failed with output:"
+    echo "$RCLONE_OUTPUT"
+    
+    # Take the last few lines of the output for the error message
+    TAIL_OUTPUT=$(echo "$RCLONE_OUTPUT" | tail -n 5)
+    ERR="rclone upload failed with exit code $RCLONE_EXIT.\nOutput:\n$TAIL_OUTPUT"
+    
     log_to_supabase "failed" $FILE_SIZE "$ERR" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     notify_telegram "$ERR"
     exit 1

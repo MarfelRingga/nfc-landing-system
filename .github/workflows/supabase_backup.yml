@@ -25,7 +25,7 @@ jobs:
       - name: Setup rclone config
         run: |
           mkdir -p ~/.config/rclone/
-          echo "${{ secrets.RCLONE_CONFIG_CONTENT }}" > ~/.config/rclone/rclone.conf
+          echo "${{ secrets.RCLONE_CONFIG_DATA || secrets.RCLONE_CONFIG_CONTENT }}" > ~/.config/rclone/rclone.conf
 
       - name: Run backup script
         env:
