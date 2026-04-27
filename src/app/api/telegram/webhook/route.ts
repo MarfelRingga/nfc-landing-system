@@ -80,11 +80,11 @@ export async function POST(req: Request) {
     }
     else if (text === '/backup') {
       // IDE 3: Memicu backup manual via GitHub Actions
-      const githubToken = process.env.GITHUB_PAT;
-      const githubRepo = process.env.GITHUB_REPO; // e.g. "username/nfc-landing-system"
+      const githubToken = process.env.GH_PAT;
+      const githubRepo = process.env.GH_REPO; // e.g. "username/nfc-landing-system"
 
       if (!githubToken || !githubRepo) {
-        await sendMessage(chatId, "⚠️ Konfigurasi <code>GITHUB_PAT</code> atau <code>GITHUB_REPO</code> belum di-set di environment.");
+        await sendMessage(chatId, "⚠️ Konfigurasi <code>GH_PAT</code> atau <code>GH_REPO</code> belum di-set di environment.");
         return NextResponse.json({ ok: true });
       }
 
