@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendWelcomeEmail } from '@/lib/sendEmail';
+import { sendTelegramNotification } from '@/lib/sendTelegram';
 
 export async function POST(req: Request) {
   try {
@@ -28,10 +29,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // TTD / Email Sent Asynchronously (non-blocking)
-    sendWelcomeEmail(email, username).catch(err => {
-      console.error('Failed to send welcome email:', err);
-    });
+    // Await the email sending so the server doesn't terminate before it completes.
+    // Wrap in try-catch so registration still succeeds even if email fails.
+    try {
+      const emailPromise = sendWelcomeEmail(email, username);
+      
+      const telegramMessage = `🚀 <b>New User Registration!</b>\n\n<b>Username:</b> ${username}\n<b>Email:</b> ${email}\n<b>Phone:</b> ${phone}`;
+      const telegramPromise = sendTelegramNotification(telegramMessage);
+
+      const [emailResult, telegramResult] = await Promise.all([emailPromise, telegramPromise]);
+      
+      if (!emailResult.success) {
+        console.error('Failed to send welcome email:', emailResult.error);
+      }
+      
+      if (!telegramResult.success) {
+        console.error('Failed to send Telegram notification:', telegramResult.error);
+      }
+    } catch (err) {
+      console.error('Exception during notifications:', err);
+    }
 
     return NextResponse.json({ success: true, user: data.user });
   } catch (error: any) {

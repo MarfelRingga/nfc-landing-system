@@ -3,10 +3,12 @@ import nodemailer from 'nodemailer';
 export const sendWelcomeEmail = async (toEmail: string, name: string) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD, // Use Gmail App Password
+        user: process.env.SMTP_EMAIL || 'hello@rifelo.id',
+        pass: process.env.SMTP_PASSWORD, // Use Zoho App Password
       },
     });
 
@@ -14,7 +16,7 @@ export const sendWelcomeEmail = async (toEmail: string, name: string) => {
     const htmlContent = getWelcomeEmailTemplate(name);
 
     const mailOptions = {
-      from: `"Rifelo Team" <${process.env.SMTP_EMAIL}>`,
+      from: `"Rifelo" <${process.env.SMTP_EMAIL || 'hello@rifelo.id'}>`,
       to: toEmail,
       subject: 'Welcome to Rifelo! 🎉',
       html: htmlContent,

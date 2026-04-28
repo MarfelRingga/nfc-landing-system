@@ -32,7 +32,9 @@ describe('sendWelcomeEmail', () => {
     expect(result.messageId).toBe('mock-message-id');
 
     expect(nodemailer.createTransport).toHaveBeenCalledWith({
-      service: 'gmail',
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true,
       auth: {
         user: 'hello@rifelo.id',
         pass: 'fakepassword',
@@ -42,7 +44,7 @@ describe('sendWelcomeEmail', () => {
     expect(mockSendMail).toHaveBeenCalledTimes(1);
     expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: '"Rifelo Team" <hello@rifelo.id>',
+        from: '"Rifelo" <hello@rifelo.id>',
         to: 'user@example.com',
         subject: 'Welcome to Rifelo! 🎉',
         html: expect.stringContaining('Hi John Doe,'), // Validates template is used
