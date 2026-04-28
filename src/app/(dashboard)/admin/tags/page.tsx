@@ -344,7 +344,7 @@ export default function AdminTagsPage() {
                       required
                       value={newToken}
                       onChange={(e) => setNewToken(e.target.value)}
-                      placeholder="e.g. aB3dE5fG"
+                      placeholder="8-character tag code"
                       className="flex-1 w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all font-mono"
                     />
                     <button

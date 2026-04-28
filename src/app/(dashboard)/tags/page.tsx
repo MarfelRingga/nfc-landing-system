@@ -586,7 +586,7 @@ function NFCTagsContent() {
                     type="text"
                     value={tagName}
                     onChange={(e) => setTagName(e.target.value)}
-                    placeholder="e.g. My Keychain, Office Card"
+                    placeholder="Tag label"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                   />
                 </div>
@@ -657,7 +657,7 @@ function NFCTagsContent() {
                     type="text"
                     value={tagName}
                     onChange={(e) => setTagName(e.target.value)}
-                    placeholder="e.g. My Keychain"
+                    placeholder="New tag label"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                   />
                 </div>
@@ -866,7 +866,7 @@ function NFCTagsContent() {
                           required
                           value={redirectUrl}
                           onChange={(e) => setRedirectUrl(e.target.value)}
-                          placeholder="https://example.com"
+                          placeholder="Redirect URL"
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                         />
                       </div>

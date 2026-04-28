@@ -80,8 +80,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-slate-700 mb-2">Recovery Email (Optional)</label>
               <input 
                 type="email" 
-                placeholder="your@email.com" 
-                defaultValue="user@rifelo.com"
+                placeholder="Email address" 
+                defaultValue=""
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
               />
               <p className="text-xs text-slate-500 mt-2">

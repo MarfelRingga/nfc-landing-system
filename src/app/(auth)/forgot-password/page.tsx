@@ -144,7 +144,7 @@ export default function ForgotPasswordPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-3"
-                    placeholder="8123456789"
+                    placeholder="Phone number"
                   />
                 </div>
               </div>

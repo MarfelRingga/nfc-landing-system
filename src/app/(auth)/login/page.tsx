@@ -13,7 +13,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/profile';
   
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -21,9 +21,9 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedPhone = localStorage.getItem('rememberedPhone');
-    if (savedPhone) {
-      setPhone(savedPhone);
+    const savedIdentifier = localStorage.getItem('rememberedIdentifier');
+    if (savedIdentifier) {
+      setIdentifier(savedIdentifier);
     }
   }, []);
 
@@ -34,16 +34,30 @@ function LoginForm() {
 
     try {
       if (rememberMe) {
-        localStorage.setItem('rememberedPhone', phone);
+        localStorage.setItem('rememberedIdentifier', identifier);
       } else {
-        localStorage.removeItem('rememberedPhone');
+        localStorage.removeItem('rememberedIdentifier');
       }
 
-      const formattedPhone = formatIndonesianPhoneNumber(phone);
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        phone: formattedPhone,
-        password: password,
-      });
+      // Check if identifier is an email (contains @ symbol)
+      const isEmail = identifier.includes('@');
+      
+      let signInData;
+      
+      if (isEmail) {
+        signInData = {
+          email: identifier,
+          password: password,
+        };
+      } else {
+        const formattedPhone = formatIndonesianPhoneNumber(identifier);
+        signInData = {
+          phone: formattedPhone,
+          password: password,
+        };
+      }
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword(signInData);
 
       if (authError) throw authError;
 
@@ -69,23 +83,20 @@ function LoginForm() {
 
         <form className="space-y-6" onSubmit={handleLogin}>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-[#0c0e0b]">
-              Phone Number
+            <label htmlFor="identifier" className="block text-sm font-medium text-[#0c0e0b]">
+              Email or Phone Number
             </label>
-            <div className="mt-2 flex rounded-xl shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#a299af] bg-[#F4F3EE]/50 overflow-hidden">
-              <span className="flex select-none items-center pl-4 pr-3 text-[#0c0e0b]/60 sm:text-sm border-r border-[#aaafbc]/20 font-medium">
-                +62
-              </span>
+            <div className="mt-2">
               <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
+                id="identifier"
+                name="identifier"
+                type="text"
+                autoComplete="username"
                 required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-3"
-                placeholder="8123456789"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
+                placeholder="Email or phone"
               />
             </div>
           </div>
@@ -104,7 +115,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4 pr-10"
-                placeholder="••••••••"
+                placeholder="Password"
               />
               <button
                 type="button"

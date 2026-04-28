@@ -16,6 +16,7 @@ function SignupForm() {
   const redirectUrl = redirectParamsUrl || '/profile';
 
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [nfcTagCode, setNfcTagCode] = useState(claimToken || '');
@@ -38,22 +39,35 @@ function SignupForm() {
 
       const formattedPhone = formatIndonesianPhoneNumber(phone);
       
-      const { data, error: authError } = await supabase.auth.signUp({
-        phone: formattedPhone,
-        password: password,
-        options: {
-          data: {
-            username: username,
-            full_name: username, // Default full name to username initially
-          }
-        }
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          phone: formattedPhone,
+          password,
+          username,
+        }),
       });
 
-      if (authError) throw authError;
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.error || 'Failed to register account');
+      }
+
+      // Immediately sign in to establish session
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
 
       if (data.user) {
         setSuccess(true);
-        // Supabase might require phone verification depending on settings
         // For new tag code, overwrite redirect if not coming from claim but they entered one
         const finalRedirectUrl = (nfcTagCode && !claimToken && redirectUrl === '/profile') 
           ? `/tags?claim=${nfcTagCode}` 
@@ -61,7 +75,7 @@ function SignupForm() {
 
         setTimeout(() => {
           router.push(finalRedirectUrl);
-        }, 3000);
+        }, 1500);
       }
     } catch (err: any) {
       setError('Gagal membuat akun. Silakan periksa kembali data Anda dan coba lagi.');
@@ -85,7 +99,7 @@ function SignupForm() {
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <div>
               <p className="font-semibold">Account created!</p>
-              <p className="mt-1">Please check your phone for a verification code if required. Redirecting...</p>
+              <p className="mt-1">Signing you in & redirecting...</p>
             </div>
           </div>
         )}
@@ -105,8 +119,27 @@ function SignupForm() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z._]/g, ''))}
                 className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
-                placeholder="johndoe_"
+                placeholder="Username"
                 minLength={4}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#0c0e0b]">
+              Email Address
+            </label>
+            <div className="mt-2">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
+                placeholder="Email address"
               />
             </div>
           </div>
@@ -128,7 +161,7 @@ function SignupForm() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-3"
-                placeholder="8123456789"
+                placeholder="Phone number"
               />
             </div>
           </div>
@@ -147,7 +180,7 @@ function SignupForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4 pr-10"
-                placeholder="••••••••"
+                placeholder="Password"
               />
               <button
                 type="button"

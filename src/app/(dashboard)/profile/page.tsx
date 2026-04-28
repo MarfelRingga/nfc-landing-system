@@ -393,7 +393,7 @@ export default function ProfilePage() {
             </span>
             <input 
               type="text" 
-              placeholder="yourname" 
+              placeholder="Username" 
               value={username}
               onChange={handleUsernameChange}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium" 
@@ -407,7 +407,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
             <input 
               type="text" 
-              placeholder="Your Full Name" 
+              placeholder="Full name" 
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -417,7 +417,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Job Title</label>
             <input 
               type="text" 
-              placeholder="e.g. Product Designer"
+              placeholder="Role or job title"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -430,7 +430,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
             <input 
               type="text" 
-              placeholder="Your Company" 
+              placeholder="Company name" 
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -440,7 +440,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
             <input 
               type="email" 
-              placeholder="your@email.com" 
+              placeholder="Email address" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -551,7 +551,7 @@ export default function ProfilePage() {
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
                             <input 
                               type="text" 
-                              placeholder="e.g., Instagram, Portfolio, WhatsApp" 
+                              placeholder="Platform name or link title" 
                               value={link.title}
                               onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
                               className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
@@ -561,7 +561,7 @@ export default function ProfilePage() {
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Text / Value</label>
                             <input 
                               type="text" 
-                              placeholder="e.g., @username, +62812..., or https://..." 
+                              placeholder="Link, username, or phone" 
                               value={link.url}
                               onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
                               onBlur={() => handleLinkBlur(link.id)}

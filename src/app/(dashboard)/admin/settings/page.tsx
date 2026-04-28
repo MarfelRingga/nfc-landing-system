@@ -197,7 +197,7 @@ CREATE POLICY "Allow admin write access on app_settings"
                 type="url"
                 value={contactSupportLink}
                 onChange={(e) => setContactSupportLink(e.target.value)}
-                placeholder="https://wa.me/6281234567890 or mailto:support@example.com"
+                placeholder="Contact URL (WhatsApp or email)"
                 className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 sm:text-sm transition-all bg-slate-50"
                 disabled={needsMigration}
               />
@@ -219,7 +219,7 @@ CREATE POLICY "Allow admin write access on app_settings"
                 type="url"
                 value={getYoursNowLink}
                 onChange={(e) => setGetYoursNowLink(e.target.value)}
-                placeholder="https://example.com/purchase"
+                placeholder="Purchase link (redirect URL)"
                 className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 sm:text-sm transition-all bg-slate-50"
                 disabled={needsMigration}
               />
@@ -318,7 +318,7 @@ CREATE POLICY "Allow admin write access on app_settings"
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
                             <input 
                               type="text" 
-                              placeholder="e.g., Instagram, Portfolio, WhatsApp" 
+                              placeholder="Platform name or link title" 
                               value={link.title}
                               onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
                               className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
@@ -328,7 +328,7 @@ CREATE POLICY "Allow admin write access on app_settings"
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Action URL</label>
                             <input 
                               type="text" 
-                              placeholder="e.g., https://instagram.com/rifelo" 
+                              placeholder="Profile or destination URL" 
                               value={link.url}
                               onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
                               className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 

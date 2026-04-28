@@ -245,7 +245,7 @@ export default function AdminCirclesPage() {
                   value={newCircle.name}
                   onChange={handleNameChange}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  placeholder="e.g., The Core Four"
+                  placeholder="Circle name"
                 />
               </div>
               <div>
@@ -260,7 +260,7 @@ export default function AdminCirclesPage() {
                     value={newCircle.slug}
                     onChange={(e) => setNewCircle({ ...newCircle, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '') })}
                     className="flex-1 px-3 py-2 border border-slate-200 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    placeholder="e.g., the-core-four"
+                    placeholder="Circle slug (URL-friendly)"
                   />
                 </div>
                 <p className="text-xs text-slate-500 mt-1">This will be the public link to your circle.</p>
@@ -284,7 +284,7 @@ export default function AdminCirclesPage() {
                     value={newCircle.invite_code}
                     onChange={(e) => setNewCircle({ ...newCircle, invite_code: e.target.value.toUpperCase() })}
                     className="flex-1 px-3 py-2 font-mono uppercase border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    placeholder="e.g., CRCL-123"
+                    placeholder="Claim token"
                   />
                   <button
                     type="button"
