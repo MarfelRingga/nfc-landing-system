@@ -1,22 +1,53 @@
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { format } from 'date-fns';
-import { Database, AlertTriangle, CheckCircle, Clock, Shield } from 'lucide-react';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Database, AlertTriangle, CheckCircle, Clock, Shield, Loader2 } from 'lucide-react';
 
-export default async function BackupMonitoringPage() {
-  const { data: logs, error } = await supabaseAdmin
-    .from('backup_logs')
-    .select('*')
-    .order('started_at', { ascending: false })
-    .limit(50);
+export default function BackupMonitoringPage() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLogs = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const response = await fetch('/api/admin/backups', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch backup logs');
+        
+        const data = await response.json();
+        if (isMounted) setLogs(data.logs || []);
+      } catch (err: any) {
+        if (isMounted) setError(err.message || 'Error loading backup logs');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    fetchLogs();
+    return () => { isMounted = false; };
+  }, []);
 
   const stats = {
     total: logs?.length || 0,
-    success: logs?.filter(l => l.status === 'success').length || 0,
-    failed: logs?.filter(l => l.status === 'failed').length || 0,
-    running: logs?.filter(l => l.status === 'running').length || 0,
+    success: logs?.filter((l: any) => l.status === 'success').length || 0,
+    failed: logs?.filter((l: any) => l.status === 'failed').length || 0,
+    running: logs?.filter((l: any) => l.status === 'running').length || 0,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -43,7 +74,7 @@ export default async function BackupMonitoringPage() {
       {error ? (
         <div className="bg-red-50 p-4 rounded-lg border border-red-200 flex items-center gap-3 text-red-700">
           <AlertTriangle className="w-5 h-5" />
-          <p>Error loading backup logs: {error.message}</p>
+          <p>{error}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -59,7 +90,7 @@ export default async function BackupMonitoringPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {logs?.map((log) => (
+              {logs?.map((log: any) => (
                 <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">

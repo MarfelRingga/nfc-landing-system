@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { CircleDot, Plus, Trash2, Loader2, Save, RefreshCw } from 'lucide-react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function AdminCirclesPage() {
   const router = useRouter();
@@ -19,16 +20,15 @@ export default function AdminCirclesPage() {
   const fetchCircles = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('circles')
-        .select(`
-          *,
-          circle_members (count)
-        `)
-        .order('created_at', { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      if (error) throw error;
-      setCircles(data || []);
+      const response = await fetch('/api/admin/circles', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch circles');
+      const data = await response.json();
+      setCircles(data.circles || []);
     } catch (err) {
       console.error('Error fetching circles:', err);
     } finally {
@@ -74,36 +74,23 @@ export default function AdminCirclesPage() {
         finalSlug = `${finalSlug}-${randomSuffix}`;
       }
 
-      const { data: circle, error: insertError } = await supabase
-        .from('circles')
-        .insert({
+      const response = await fetch('/api/admin/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
           name: newCircle.name,
           description: newCircle.description,
           slug: finalSlug,
-          invite_code: newCircle.invite_code.toUpperCase(),
-          owner_id: session.user.id
+          invite_code: newCircle.invite_code.toUpperCase()
         })
-        .select()
-        .single();
+      });
 
-      if (insertError) {
-        if (insertError.code === '23505' && insertError.message.includes('slug')) {
-          throw new Error('This Custom URL (slug) is already taken. Please choose another one.');
-        }
-        throw insertError;
-      }
-      
-      // Add creator as admin member
-      if (circle) {
-        const { error: memberError } = await supabase
-          .from('circle_members')
-          .insert({
-            circle_id: circle.id,
-            profile_id: session.user.id,
-            role: 'Admin'
-          });
-        
-        if (memberError) throw memberError;
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create circle');
       }
 
       setIsAddModalOpen(false);
@@ -123,8 +110,17 @@ export default function AdminCirclesPage() {
     
     setIsSaving(true);
     try {
-      const { error } = await supabase.from('circles').delete().eq('id', deleteId);
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch(`/api/admin/circles?id=${deleteId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to delete circle');
+
       setDeleteId(null);
       setErrorMessage(null);
       fetchCircles();
@@ -146,11 +142,7 @@ export default function AdminCirclesPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

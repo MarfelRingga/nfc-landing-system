@@ -6,10 +6,46 @@ import { sendTelegramNotification } from '@/lib/sendTelegram';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, phone, password, username } = body;
+    const { email, phone, password, username, nfcTagCode } = body;
 
-    if (!email || !phone || !password || !username) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!email || !phone || !password || !username || !nfcTagCode) {
+      return NextResponse.json({ error: 'Data pendaftaran tidak lengkap.' }, { status: 400 });
+    }
+
+    // 1. Check if username is taken (Case-insensitive)
+    const { data: existingProfile, error: profileCheckError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .ilike('username', username.trim())
+      .maybeSingle();
+
+    if (profileCheckError) {
+      console.error('Profile check error:', profileCheckError);
+      return NextResponse.json({ error: 'Gagal memvalidasi username.' }, { status: 500 });
+    }
+
+    if (existingProfile) {
+      return NextResponse.json({ error: 'Username ini sudah digunakan.' }, { status: 400 });
+    }
+
+    // 2. Validate NFC Tag
+    const { data: tag, error: tagError } = await supabaseAdmin
+      .from('nfc_tags')
+      .select('id, user_id')
+      .ilike('token', nfcTagCode.trim())
+      .maybeSingle();
+
+    if (tagError) {
+      console.error('Tag validation error:', tagError);
+      return NextResponse.json({ error: 'Gagal memvalidasi tag NFC.' }, { status: 500 });
+    }
+
+    if (!tag) {
+      return NextResponse.json({ error: 'Kode tag NFC tidak valid.' }, { status: 400 });
+    }
+
+    if (tag.user_id) {
+      return NextResponse.json({ error: 'Tag ini sudah terhubung dengan akun lain.' }, { status: 400 });
     }
 
     // Use admin endpoint to create user with BOTH email and phone identities.
@@ -27,6 +63,21 @@ export async function POST(req: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // 3. Link tag to the newly created user
+    const { error: tagLinkError } = await supabaseAdmin
+      .from('nfc_tags')
+      .update({ 
+        user_id: data.user!.id,
+        status: 'active',
+        tag_name: 'Tag Utama'
+      })
+      .eq('id', tag.id);
+
+    if (tagLinkError) {
+      console.error('Failed to link tag during registration:', tagLinkError);
+      // We still proceed since user is created, but we could notify admin or log it heavily.
     }
 
     // Await the email sending so the server doesn't terminate before it completes.
@@ -53,6 +104,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, user: data.user });
   } catch (error: any) {
     console.error('Registration error:', error);
+    
+    // Notify Telegram about the error
+    sendTelegramNotification(
+      `💥 <b>Server Error during Registration</b>\n\n<b>Message:</b> ${error.message}`
+    ).catch(e => console.error('Failed to send error to telegram:', e));
+
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

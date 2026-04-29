@@ -67,13 +67,26 @@ export default function AdminUsersPage() {
   const confirmToggleAdmin = async () => {
     if (!adminToggleInfo) return;
 
+    setErrorMessage(null);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_admin: !adminToggleInfo.currentStatus })
-        .eq('id', adminToggleInfo.userId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expired');
 
-      if (error) throw error;
+      const response = await fetch(`/api/admin/users/${adminToggleInfo.userId}/role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ is_admin: !adminToggleInfo.currentStatus })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update admin status');
+      }
+
       fetchUsers();
       setAdminToggleInfo(null);
     } catch (err: any) {

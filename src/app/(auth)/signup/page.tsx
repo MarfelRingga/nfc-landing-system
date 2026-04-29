@@ -49,13 +49,14 @@ function SignupForm() {
           phone: formattedPhone,
           password,
           username,
+          nfcTagCode,
         }),
       });
 
       const resData = await response.json();
 
       if (!response.ok) {
-        throw new Error(resData.error || 'Failed to register account');
+        throw new Error(resData.error || 'Gagal membuat akun');
       }
 
       // Immediately sign in to establish session
@@ -78,7 +79,7 @@ function SignupForm() {
         }, 1500);
       }
     } catch (err: any) {
-      setError('Gagal membuat akun. Silakan periksa kembali data Anda dan coba lagi.');
+      setError(err.message || 'Gagal membuat akun. Silakan periksa kembali data Anda dan coba lagi.');
     } finally {
       setIsLoading(false);
     }

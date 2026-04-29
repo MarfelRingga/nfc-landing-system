@@ -9,6 +9,11 @@
   --color-slate-water: #aaafbc;
   --color-amethyst: #a299af;
   --color-obsidian: #1A1A1A;
+  
+  --animate-shimmer: shimmer 2s infinite linear;
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer base {

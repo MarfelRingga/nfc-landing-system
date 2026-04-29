@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { ScanLine, ArrowRight, Loader2 } from 'lucide-react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 function ClaimContent() {
   const searchParams = useSearchParams();
@@ -31,7 +32,7 @@ function ClaimContent() {
   }, [token, router]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-[#F4F3EE] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#a299af]" /></div>;
+    return <PageSkeleton />;
   }
 
   const redirectUrl = encodeURIComponent(`/tags?claim=${token}`);

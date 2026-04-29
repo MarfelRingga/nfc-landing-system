@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 const hexToRgb = (hex: string) => {
   let r = 0, g = 0, b = 0;
@@ -457,12 +458,8 @@ export default function CircleManagementPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-      <RefreshCw className="w-8 h-8 text-slate-400 animate-spin" />
-    </div>
-  );
-}
+    return <PageSkeleton />;
+  }
 
 if (!activeCircle) {
   return (

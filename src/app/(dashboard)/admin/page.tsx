@@ -4,50 +4,46 @@ import { useState, useEffect } from 'react';
 import { Users, ScanLine, ShieldAlert, Loader2, Database } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({ users: 0, tags: 0, backups: 'checking...' });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchStats = async () => {
       try {
-        const { count: usersCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-        const { count: tagsCount } = await supabase
-          .from('nfc_tags')
-          .select('*', { count: 'exact', head: true });
-
-        const { data: latestBackup } = await supabase
-          .from('backup_logs')
-          .select('status')
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        setStats({
-          users: usersCount || 0,
-          tags: tagsCount || 0,
-          backups: latestBackup?.status || 'no logs'
+        const response = await fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
         });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch admin stats');
+        }
+
+        const data = await response.json();
+        if (isMounted) {
+          setStats(data.stats);
+        }
       } catch (error) {
         console.error('Error fetching admin stats:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchStats();
+    return () => { isMounted = false; };
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

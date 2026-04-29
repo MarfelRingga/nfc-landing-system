@@ -5,6 +5,7 @@ import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getPlatformInfo } from '@/lib/platforms';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 interface AdminLink {
   id: string;
@@ -122,11 +123,7 @@ export default function AdminSettingsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

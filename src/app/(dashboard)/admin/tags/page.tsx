@@ -38,13 +38,18 @@ export default function AdminTagsPage() {
   const fetchTags = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('nfc_tags')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
 
-      if (error) throw error;
-      setTags(data || []);
+      const response = await fetch('/api/admin/tags', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch tags');
+      
+      const data = await response.json();
+      setTags(data.tags || []);
     } catch (err) {
       console.error('Error fetching tags:', err);
     } finally {
@@ -72,18 +77,21 @@ export default function AdminTagsPage() {
     setSuccess(null);
 
     try {
-      const { error } = await supabase
-        .from('nfc_tags')
-        .insert({
-          token: newToken.trim(),
-          status: 'active'
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
 
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('This token already exists.');
-        }
-        throw error;
+      const response = await fetch('/api/admin/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ token: newToken.trim() })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create tag');
       }
 
       setSuccess('Tag created successfully!');
@@ -108,12 +116,21 @@ export default function AdminTagsPage() {
     if (!deleteId) return;
 
     try {
-      const { error } = await supabase
-        .from('nfc_tags')
-        .delete()
-        .eq('id', deleteId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
 
-      if (error) throw error;
+      const response = await fetch(`/api/admin/tags?id=${deleteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete tag');
+      }
+      
       fetchTags();
       setDeleteId(null);
     } catch (err: any) {

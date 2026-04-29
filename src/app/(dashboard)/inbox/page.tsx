@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Loader2, MessageSquare, Trash2, Clock, AlertCircle, Trash } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 type ProfileMessage = {
   id: string;
@@ -73,12 +74,7 @@ export default function InboxPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-900" />
-        <p className="text-sm text-slate-500 font-medium">Loading inbox...</p>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
