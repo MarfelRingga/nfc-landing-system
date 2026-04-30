@@ -74,38 +74,26 @@ function NFCTagsContent() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
 
-          // Find the tag
-          const { data: tag, error: findError } = await supabase
-            .from('nfc_tags')
-            .select('id, circle_id')
-            .ilike('token', claimToken.trim())
-            .is('user_id', null)
-            .maybeSingle();
+          const response = await fetch('/api/tags/claim', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              token: claimToken.trim(),
+              tagName: 'My NFC Tag'
+            })
+          });
 
-          if (findError || !tag) {
-            console.error('Invalid token or already claimed');
+          const result = await response.json();
+
+          if (!response.ok) {
+            console.error('Invalid token or already claimed:', result.error);
             return;
           }
 
-          // Claim the tag
-          await supabase
-            .from('nfc_tags')
-            .update({ 
-              user_id: session.user.id,
-              tag_name: 'My NFC Tag',
-              status: 'active'
-            })
-            .eq('id', tag.id);
-
-          // Join circle if applicable
-          if (tag.circle_id) {
-            await supabase
-              .from('circle_members')
-              .upsert({
-                circle_id: tag.circle_id,
-                profile_id: session.user.id,
-                role: 'Member'
-              }, { onConflict: 'circle_id,profile_id' });
+          if (result.tag?.circle_id) {
             window.dispatchEvent(new Event('workspace-changed'));
           }
 
@@ -114,8 +102,13 @@ function NFCTagsContent() {
           
           // Remove query param
           router.replace('/tags');
-        } catch (err) {
+        } catch (err: any) {
           console.error('Auto claim error:', err);
+          fetch('/api/notify-error', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: err.message, stack: err.stack, customContext: 'Auto Claim Tag Error' })
+          }).catch(() => {});
         } finally {
           setIsLoading(false);
         }
@@ -243,41 +236,25 @@ function NFCTagsContent() {
       }
       if (!session) throw new Error('Not authenticated');
 
-      // 1. Find the tag by token where user_id is null
-      const { data: tag, error: findError } = await supabase
-        .from('nfc_tags')
-        .select('id, circle_id')
-        .ilike('token', token.trim())
-        .is('user_id', null)
-        .maybeSingle();
+      const response = await fetch('/api/tags/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          token: token.trim(),
+          tagName: tagName.trim()
+        })
+      });
 
-      if (findError) throw findError;
-      if (!tag) {
-        throw new Error('Invalid token or tag already claimed.');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to claim tag');
       }
 
-      // 2. Claim the tag
-      const { error: updateError } = await supabase
-        .from('nfc_tags')
-        .update({ 
-          user_id: session.user.id,
-          tag_name: tagName.trim() || 'My NFC Tag',
-          status: 'active'
-        })
-        .eq('id', tag.id);
-
-      if (updateError) throw updateError;
-
-      // 3. If tag has a circle_id, join the user to that circle automatically
-      if (tag.circle_id) {
-        await supabase
-          .from('circle_members')
-          .upsert({
-            circle_id: tag.circle_id,
-            profile_id: session.user.id,
-            role: 'Member'
-          }, { onConflict: 'circle_id,profile_id' });
-        
+      if (result.tag?.circle_id) {
         // Refresh circles list
         await fetchTags();
         window.dispatchEvent(new Event('workspace-changed'));
@@ -323,29 +300,24 @@ function NFCTagsContent() {
         if (circle) targetCircleId = circle.id;
       }
 
-      const { error: updateError } = await supabase
-        .from('nfc_tags')
-        .update({ 
-          tag_name: tagName.trim() || 'My NFC Tag',
-          interaction_mode: interactionMode,
-          redirect_url: redirectUrl.trim() || null,
-          circle_id: targetCircleId
+      const response = await fetch(`/api/tags/${editingTag.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          tagName: tagName.trim(),
+          interactionMode: interactionMode,
+          redirectUrl: redirectUrl.trim(),
+          circleId: targetCircleId
         })
-        .eq('id', editingTag.id);
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to update tag');
 
-      // Join the user to the circle if they are setting a tag to it
       if (targetCircleId) {
-        await supabase
-          .from('circle_members')
-          .upsert({
-            circle_id: targetCircleId,
-            profile_id: session.user.id,
-            role: 'Member'
-          }, { onConflict: 'circle_id,profile_id' });
-        
-        // Refresh circles list
         await fetchTags();
         window.dispatchEvent(new Event('workspace-changed'));
       }
@@ -388,16 +360,29 @@ function NFCTagsContent() {
     if (!deleteId) return;
 
     try {
-      const { error } = await supabase
-        .from('nfc_tags')
-        .update({ user_id: null })
-        .eq('id', deleteId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      if (error) throw error;
+      const response = await fetch(`/api/tags/${deleteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to detach tag');
+
       fetchTags();
       setDeleteId(null);
     } catch (err: any) {
       console.error('Error deleting tag:', err);
+      // Optional telegram notification
+      fetch('/api/notify-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: err.message, stack: err.stack, customContext: 'Delete Tag Error' })
+      }).catch(() => {});
       setErrorMessage(err.message || 'Failed to delete tag');
     }
   };
