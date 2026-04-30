@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendWelcomeEmail } from '@/lib/sendEmail';
 import { sendTelegramNotification } from '@/lib/sendTelegram';
+import { isRateLimited } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    // 1. Rate Limiting protection
+    let ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (ip.includes(',')) ip = ip.split(',')[0].trim();
+    if (isRateLimited(ip, 5, 60000)) { // Max 5 registrations per minute per IP
+      return NextResponse.json({ error: 'Terlalu banyak permintaan. Silakan coba beberapa saat lagi.' }, { status: 429 });
+    }
+
     const body = await req.json();
     const { email, phone, password, username, nfcTagCode } = body;
 

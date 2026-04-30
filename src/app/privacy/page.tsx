@@ -10,12 +10,12 @@ export default function PrivacyPolicyPage() {
           <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
             <img 
               src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
-              alt="rifelo Logo" 
+              alt="Rifelo Logo" 
               className="w-full h-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>
-          <span className="font-semibold text-lg tracking-tight">rifelo</span>
+          <span className="font-semibold text-lg tracking-tight">Rifelo</span>
         </Link>
         <Link 
           href="/" 

@@ -130,6 +130,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           fetchJoinedCircles();
 
+          const checkInbox = async () => {
+            const lastViewed = localStorage.getItem('lastViewedInboxTime');
+            let query = supabase.from('profile_messages').select('*', { count: 'exact', head: true }).eq('profile_id', session.user.id);
+            if (lastViewed) {
+              query = query.gt('created_at', lastViewed);
+            }
+            const { count } = await query;
+            if (count && count > 0) {
+              setHasUnreadInbox(true);
+            } else {
+              setHasUnreadInbox(false);
+            }
+          };
+          checkInbox();
+
           // Subscribe to membership changes
           const channel = supabase
             .channel(`user-memberships-${session.user.id}`)
@@ -184,6 +199,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasUnreadInbox, setHasUnreadInbox] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('activeWorkspaceId');
@@ -265,6 +281,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isWorkspaceLoaded && activeWorkspaceId && pathname) {
+      if (pathname === '/inbox') {
+        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
+        setHasUnreadInbox(false);
+      }
       // Don't save paths that are not part of the dashboard menu (like login)
       const isDashboardPath = menuItems.some(item => pathname === item.href || pathname.startsWith(item.href + '/'));
       if (isDashboardPath) {
@@ -449,14 +469,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors justify-between ${
                   isActive 
                     ? 'bg-slate-100 text-slate-900' 
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-slate-900' : 'text-slate-400'}`} />
-                {item.name}
+                <div className="flex items-center">
+                  <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-slate-900' : 'text-slate-400'}`} />
+                  {item.name}
+                </div>
+                {item.name === 'Inbox' && hasUnreadInbox && (
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                )}
               </Link>
             );
           })}
@@ -487,12 +512,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="relative w-6 h-6">
               <img 
                 src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
-                alt="rifelo Logo" 
+                alt="Rifelo Logo" 
                 className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">rifelo</span>
+            <span className="text-lg font-bold tracking-tight text-slate-900">Rifelo</span>
           </div>
           
           {/* Mobile Mode Switcher */}
@@ -590,11 +615,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                  className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 ${
                     isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900' : ''}`} />
+                  <div className="relative">
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900' : ''}`} />
+                    {item.name === 'Inbox' && hasUnreadInbox && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 border border-white"></div>
+                    )}
+                  </div>
                   <span className="text-[10px] font-medium truncate max-w-full px-1">{item.name}</span>
                 </Link>
               );
@@ -606,41 +636,35 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Join Mode Modal */}
       {isJoinModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[320px] sm:max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">Join Mode</h3>
               <button onClick={() => setIsJoinModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleJoinWorkspace} className="p-6">
-              <label htmlFor="code" className="block text-sm font-medium text-slate-700 mb-2">
-                Enter Invite or Activation Code
-              </label>
+            <form onSubmit={handleJoinWorkspace} className="p-5">
               <input
                 id="code"
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="Enter invite code"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all uppercase"
+                placeholder="ENTER ACTIVATION CODE"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all uppercase placeholder:normal-case font-medium text-center tracking-widest text-sm"
                 required
               />
-              <p className="mt-3 text-xs text-slate-500 leading-relaxed">
-                Enter a valid invite code to join a Circle.
-              </p>
-              <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-4">
+              <div className="mt-5 flex flex-col items-center justify-end gap-3">
                 {errorMessage && (
-                  <span className="flex items-center text-sm text-red-600 font-medium animate-in fade-in slide-in-from-right-4">
-                    <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                  <span className="flex items-center text-xs text-red-600 font-medium animate-in fade-in slide-in-from-right-4 w-full justify-center text-center">
+                    <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
                     {errorMessage}
                   </span>
                 )}
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setIsJoinModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                <div className="flex gap-2 w-full">
+                  <button type="button" onClick={() => setIsJoinModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors">
                     Cancel
                   </button>
-                  <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                  <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
                     Join Mode
                   </button>

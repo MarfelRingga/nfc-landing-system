@@ -129,7 +129,7 @@ export default function LandingPage() {
           <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
             <img 
               src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
-              alt="rifelo Logo" 
+              alt="Rifelo Logo" 
               className="w-full h-full object-contain"
              referrerPolicy="no-referrer" />
           </div>
@@ -175,7 +175,7 @@ export default function LandingPage() {
             </AnimatePresence>
 
             {/* Left: NFC Bracelet */}
-            <div className="flex-1 flex justify-end items-center min-w-0 pointer-events-none">
+            <motion.div layout className="flex-1 flex justify-end items-center min-w-0 pointer-events-none">
               <motion.div 
                 layout
                 animate={{ 
@@ -194,15 +194,16 @@ export default function LandingPage() {
                   className="object-contain"
                   referrerPolicy="no-referrer" />
               </motion.div>
-            </div>
+            </motion.div>
 
             {/* Center: Button */}
             <AnimatePresence mode="popLayout">
-              {!isConnected && (
+              {mounted && !isConnected && (
                 <motion.div 
                   key="connect-btn-old"
                   layout
-                  initial={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="flex flex-col items-center justify-center z-[100] shrink-0 mx-2 relative cursor-pointer pointer-events-auto"
@@ -219,7 +220,7 @@ export default function LandingPage() {
             </AnimatePresence>
 
             {/* Right: Phone Mockup */}
-            <div className="flex-1 flex justify-start items-center min-w-0 pointer-events-none">
+            <motion.div layout className="flex-1 flex justify-start items-center min-w-0 pointer-events-none">
               <motion.div 
                 layout
                 animate={{ 
@@ -244,7 +245,7 @@ export default function LandingPage() {
                   className="object-contain"
                   referrerPolicy="no-referrer" />
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Scroll Hint */}
@@ -372,7 +373,7 @@ export default function LandingPage() {
                       {/* Header */}
                       <div className="text-center z-20 mt-2 mb-6 shrink-0">
                         <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
-                          rifelo
+                          Rifelo
                         </h1>
                         <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
                           Private Circle Member
@@ -384,7 +385,7 @@ export default function LandingPage() {
                         {/* Center Circle Name */}
                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                           <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
-                            rifelo
+                            Rifelo
                           </div>
                         </div>
 
@@ -491,7 +492,7 @@ export default function LandingPage() {
                       {/* Header */}
                       <div className="text-center z-20 mt-6 mb-4 shrink-0">
                         <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
-                          rifelo
+                          Rifelo
                         </h1>
                         <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
                           {resonanceStatus === 'merged' ? (
@@ -571,7 +572,7 @@ export default function LandingPage() {
                             <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 60px #a299af` }} />
                           </div>
                           <div className={`font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
-                            rifelo
+                            Rifelo
                           </div>
                         </div>
                       </div>
@@ -706,7 +707,7 @@ export default function LandingPage() {
                       <div>
                         <h1 className="text-xl font-bold tracking-tight text-slate-900">Marfel Ringga P</h1>
                         <p className="text-[11px] text-slate-500 mt-1">
-                          Founder at rifelo
+                          Founder at Rifelo
                         </p>
                       </div>
                     </div>
@@ -721,7 +722,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-1 gap-2">
                       <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <Briefcase className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                        <span className="text-[11px] truncate">rifelo</span>
+                        <span className="text-[11px] truncate">Rifelo</span>
                       </div>
                       <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <Mail className="w-4 h-4 mr-2 text-slate-400 shrink-0" />

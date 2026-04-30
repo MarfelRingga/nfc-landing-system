@@ -87,6 +87,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check expiration (15 minutes from created_at)
+    const createdAt = new Date(resetRecord.created_at).getTime();
+    const now = Date.now();
+    const expirationTimeMs = 15 * 60 * 1000; // 15 minutes
+    
+    if (now - createdAt > expirationTimeMs) {
+      return NextResponse.json(
+        { error: 'Reset code has expired. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
     // 2. Get the user ID using our secure RPC function
     // Try with '+' first (standard E.164 format)
     let { data: userId, error: rpcError } = await supabaseAdmin.rpc('get_user_id_by_phone', {

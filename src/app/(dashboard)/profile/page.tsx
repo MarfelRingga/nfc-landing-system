@@ -574,7 +574,7 @@ export default function ProfilePage() {
             
             {links.length === 0 && (
               <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
-                <p className="text-sm text-slate-500">No links added yet. Click "Add Link" to get started.</p>
+                <p className="text-sm text-slate-500">No links added yet.<br/>Click "Add Link" to get started.</p>
               </div>
             )}
           </div>

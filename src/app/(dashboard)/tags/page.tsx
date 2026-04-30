@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 interface NFCTag {
   id: string;
@@ -418,10 +419,7 @@ function NFCTagsContent() {
       </div>
 
       {isLoading ? (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-900" />
-          <p className="text-sm text-slate-500 font-medium">Loading tags...</p>
-        </div>
+        <PageSkeleton />
       ) : tags.length === 0 ? (
         <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
           <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-4" />

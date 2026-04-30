@@ -106,22 +106,11 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
         <p className="text-sm text-slate-500 mt-1">Send a secret message or say hello.</p>
       </div>
 
-      {isSuccess ? (
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-center animate-in fade-in zoom-in duration-300">
-          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-          </div>
-          <h3 className="text-emerald-900 font-semibold">Message Sent!</h3>
-          <p className="text-emerald-700 text-sm mt-1">Your message has been securely delivered.</p>
-          <button 
-            onClick={() => setIsSuccess(false)}
-            className="mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
-          >
-            Send another message
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 relative">
+      <div className="relative grid">
+        <form 
+          onSubmit={handleSubmit} 
+          className={`col-start-1 row-start-1 space-y-4 transition-all duration-300 ${isSuccess ? 'opacity-0 pointer-events-none invisible' : 'opacity-100'}`}
+        >
           {error && (
             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
               {error}
@@ -182,7 +171,23 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
             )}
           </button>
         </form>
-      )}
+
+        {isSuccess && (
+          <div className="col-start-1 row-start-1 h-full w-full bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300 z-10">
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+            </div>
+            <h3 className="text-emerald-900 font-semibold">Message Sent!</h3>
+            <p className="text-emerald-700 text-sm mt-1">Your message has been securely delivered.</p>
+            <button 
+              onClick={() => setIsSuccess(false)}
+              className="mt-6 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+            >
+              Send another message
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
