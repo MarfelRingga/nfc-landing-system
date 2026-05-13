@@ -14,6 +14,7 @@ import MessageForm from './MessageForm';
 import { getPlatformInfo } from '@/lib/platforms';
 import CircleRealtimeView from './CircleRealtimeView';
 import Link from 'next/link';
+import { decodeMessageSettings } from '@/lib/messageSettings';
 
 export const revalidate = 60; // Cache for 60 seconds (ISR)
 
@@ -36,6 +37,8 @@ async function getProfileData(username: string) {
 
     const visibleLinks = links.filter((l: any) => l.is_visible !== false);
 
+    const messageSettings = decodeMessageSettings(profile.message_placeholder_name || 'Your Name (Optional)');
+
     return {
       id: profile.id,
       username: profile.username,
@@ -46,7 +49,8 @@ async function getProfileData(username: string) {
       jobTitle: profile.job_title || '',
       links: visibleLinks,
       isPublic: profile.is_public !== false,
-      messagePlaceholderName: profile.message_placeholder_name || 'Your Name (Optional)',
+      allowMessages: messageSettings.isEnabled,
+      messagePlaceholderName: messageSettings.cleanName,
       messagePlaceholderContent: profile.message_placeholder_content || 'Write a secret message...'
     };
   } catch (err) {
@@ -214,8 +218,8 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                     className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl"
                   >
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-4 shadow-sm text-slate-400">
-                        <Globe className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-4 shadow-sm text-slate-400 font-bold">
+                        {link.title ? link.title.charAt(0).toUpperCase() : '#'}
                       </div>
                       <span className="font-bold text-slate-900">{link.title}</span>
                     </div>
@@ -228,11 +232,13 @@ export default async function PublicProfilePage({ params, searchParams }: { para
         )}
 
         {/* Secret Message Form */}
-        <MessageForm 
-          profileId={profile.id} 
-          placeholderName={profile.messagePlaceholderName}
-          placeholderContent={profile.messagePlaceholderContent}
-        />
+        {profile.allowMessages && (
+          <MessageForm 
+            profileId={profile.id} 
+            placeholderName={profile.messagePlaceholderName}
+            placeholderContent={profile.messagePlaceholderContent}
+          />
+        )}
       </div>
     </div>
   );

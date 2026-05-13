@@ -227,9 +227,10 @@ function SignupForm() {
               className="flex w-full justify-center items-center rounded-xl bg-[#1A1A1A] px-3 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#0c0e0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
-              {isLoading ? 'Creating account...' : 'Create Account'}
+                <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
+              ) : (
+                'Create Account'
+              )}
             </button>
           </div>
         </form>

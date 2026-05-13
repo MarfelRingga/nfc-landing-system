@@ -659,7 +659,8 @@ function NFCTagsContent() {
                       <span className="truncate">
                         {interactionMode === 'profile' ? 'Digital Profile (Default)' :
                          interactionMode === 'redirect' ? 'Custom URL Redirect' :
-                         interactionMode === 'circle' && userCircles.length === 1 ? `Circle: ${userCircles[0].name}` :
+                         interactionMode === 'photobooth' ? 'Queue Customer' :
+                          interactionMode === 'circle' && userCircles.length === 1 ? `Circle (${userCircles[0].name})` :
                          'Circle Protocol'}
                       </span>
                       <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
@@ -689,6 +690,15 @@ function NFCTagsContent() {
                             >
                               Custom URL Redirect
                             </li>
+                            <li
+                              onClick={() => {
+                                setInteractionMode('photobooth');
+                                setIsInteractionModeOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'photobooth' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                            >
+                              Queue Customer
+                            </li>
                             
                             {userCircles.length === 1 && (
                               <li
@@ -699,7 +709,7 @@ function NFCTagsContent() {
                                 }}
                                 className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'circle' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
                               >
-                                Circle: {userCircles[0].name}
+                                Circle ({userCircles[0].name})
                               </li>
                             )}
                             
@@ -715,13 +725,7 @@ function NFCTagsContent() {
                               </li>
                             )}
                             
-                            {userCircles.length === 0 && (
-                              <li
-                                className="w-full text-left px-4 py-3 text-sm text-slate-400 cursor-not-allowed"
-                              >
-                                Circle Protocol (No circles found)
-                              </li>
-                            )}
+                            {/* Do not show No circles found */}
                           </ul>
                         </div>
                       </>
@@ -812,7 +816,7 @@ function NFCTagsContent() {
                                 <li
                                   onClick={() => {
                                     setCustomRedirectMode('custom');
-                                    setRedirectUrl('');
+                                    setRedirectUrl('https://');
                                     setIsRedirectDestOpen(false);
                                   }}
                                   className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${customRedirectMode === 'custom' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
@@ -849,11 +853,32 @@ function NFCTagsContent() {
                           required
                           value={redirectUrl}
                           onChange={(e) => setRedirectUrl(e.target.value)}
-                          placeholder="Redirect URL"
+                          placeholder="https://"
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                         />
                       </div>
                     )}
+                  </div>
+                )}
+
+                {interactionMode === 'photobooth' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Link Queue Registration (Event Join Link)
+                      </label>
+                      <input
+                        type="url"
+                        required
+                        value={redirectUrl}
+                        onChange={(e) => setRedirectUrl(e.target.value)}
+                        placeholder="https://rifelo.com/q/join?event_id=XYZ"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                      />
+                      <p className="mt-1 text-xs text-slate-400">
+                        When the tag is tapped, the user will be redirected to this queue registration page.
+                      </p>
+                    </div>
                   </div>
                 )}
 

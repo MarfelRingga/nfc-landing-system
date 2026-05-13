@@ -30,7 +30,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { supabase } from '@/lib/supabase';
 
-type WorkspaceRole = 'personal' | 'circle' | 'admin';
+type WorkspaceRole = 'personal' | 'circle' | 'admin' | 'photobooth';
 
 type Workspace = {
   id: string;
@@ -39,6 +39,7 @@ type Workspace = {
   subtitle: string;
   inviteCode?: string;
   slug?: string;
+  eventCode?: string;
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -107,14 +108,39 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               .select('circle_id, role, circles(id, name, description, invite_code, slug)')
               .eq('profile_id', session.user.id);
 
+            // Fetch stored photobooth events from local storage
+            let pbWorkspaces: Workspace[] = [];
+            try {
+              const storedPb = localStorage.getItem('pb_events');
+              if (storedPb) {
+                const eventCodes = JSON.parse(storedPb);
+                if (Array.isArray(eventCodes) && eventCodes.length > 0) {
+                  const res = await fetch('/api/events');
+                  const json = await res.json();
+                  if (json.data) {
+                    const pbEvents = json.data.filter((e: any) => eventCodes.includes(e.event_code));
+                    pbWorkspaces = pbEvents.map((e: any) => ({
+                      id: String(e.id),
+                      type: 'photobooth' as WorkspaceRole,
+                      name: e.name,
+                      subtitle: 'Queue App',
+                      eventCode: e.event_code
+                    }));
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Error fetching pb events', e);
+            }
+
             setWorkspaces(prev => {
               const baseWorkspaces = prev.filter(w => w.type === 'personal');
               const adminWorkspaces = profileData.is_admin ? [{ id: 'admin', type: 'admin' as WorkspaceRole, name: 'Admin Dashboard', subtitle: 'System Management' }] : [];
               
-              const circleWorkspaces = (joinedCircles || [])
+                const circleWorkspaces = (joinedCircles || [])
                 .filter((jc: any) => jc.circles) // Ensure circle exists
                 .map((jc: any) => ({
-                  id: jc.circles.id,
+                  id: String(jc.circles.id),
                   type: 'circle' as WorkspaceRole,
                   name: jc.circles.name,
                   subtitle: jc.role || 'Member',
@@ -122,7 +148,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   slug: jc.circles.slug
                 }));
               
-              return [...baseWorkspaces, ...adminWorkspaces, ...circleWorkspaces];
+              return [...baseWorkspaces, ...adminWorkspaces, ...circleWorkspaces, ...pbWorkspaces];
             });
             setIsWorkspacesLoaded(true);
             setIsLoading(false);
@@ -227,31 +253,40 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const handleWorkspaceChange = (id: string) => {
-    setActiveWorkspaceId(id);
-    localStorage.setItem('activeWorkspaceId', id);
+  const handleWorkspaceChange = (id: string, newWs?: Workspace) => {
+    const stringId = String(id);
+    console.log('Changing workspace to:', stringId);
+    setActiveWorkspaceId(stringId);
+    localStorage.setItem('activeWorkspaceId', stringId);
     setIsWorkspaceMenuOpen(false);
     window.dispatchEvent(new Event('workspace-changed'));
     
     // Load last path for this workspace or use default
-    const lastPath = localStorage.getItem(`lastPath_${id}`);
-    const ws = workspaces.find(w => w.id === id);
+    const lastPath = localStorage.getItem(`lastPath_${stringId}`);
+    const ws = newWs || workspaces.find(w => String(w.id) === stringId);
     
+    console.log('Found workspace:', ws?.name, 'type:', ws?.type);
+
     if (lastPath) {
       router.push(lastPath);
     } else {
       // Auto-navigate based on workspace type if no last path
       if (ws?.type === 'circle') router.push(`/c/${ws.slug || ws.inviteCode}`);
+      else if (ws?.type === 'photobooth') router.push(`/queue-hub/${ws.eventCode}`);
       else if (ws?.type === 'admin') router.push('/admin/users');
       else if (ws?.type === 'personal') router.push('/profile');
     }
   };
 
-  const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
+  const activeWorkspace = workspaces.find(w => String(w.id) === String(activeWorkspaceId)) || workspaces[0];
 
   // Define menu items based on the active workspace
   const getMenuItems = () => {
     switch (activeWorkspace.type) {
+      case 'photobooth':
+        return [
+          { name: 'App Terminals', href: `/queue-hub/${activeWorkspace.eventCode}`, icon: Camera, show: true },
+        ];
       case 'circle':
         return [
           { name: 'Circle Hub', href: `/c/${activeWorkspace.slug || activeWorkspace.inviteCode}`, icon: Sparkles, show: true },
@@ -264,6 +299,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           { name: 'Users', href: '/admin/users', icon: Users, show: true },
           { name: 'NFC Tags', href: '/admin/tags', icon: ScanLine, show: true },
           { name: 'Circles', href: '/admin/circles', icon: CircleDot, show: true },
+          { name: 'Queue Manager', href: '/admin/queues', icon: Camera, show: true },
           { name: 'System Settings', href: '/admin/settings', icon: Settings, show: true },
         ];
       case 'personal':
@@ -272,6 +308,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           { name: 'My Digital ID', href: '/profile', icon: User, show: true },
           { name: 'Inbox', href: '/inbox', icon: MessageSquare, show: true },
           { name: 'NFC Tags', href: '/tags', icon: ScanLine, show: true },
+          { name: 'Queue Manager', href: '/admin/queues', icon: Camera, show: true },
           { name: 'Settings', href: '/settings', icon: Settings, show: true },
         ];
     }
@@ -335,14 +372,64 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         .select('*')
         .eq('invite_code', code)
         .maybeSingle();
-        
-      console.log('Circle found:', circle);
-      if (circleError) console.error('Circle error:', circleError);
+
       if (!circle) {
-        setErrorMessage('Invalid invite code. Circle not found.');
+        // Try finding in events (queue mode) using API
+        let pbEvent: any = null;
+        try {
+          const res = await fetch('/api/events');
+          const json = await res.json();
+          if (json.data) {
+            pbEvent = json.data.find((e: any) => e.event_code === code);
+          }
+        } catch (e) {
+           console.error("Failed to fetch events", e);
+        }
+          
+        if (!pbEvent) {
+          setErrorMessage('Invalid invite code.');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Handle Queue Mode logic
+        const newWs: Workspace = { 
+          id: String(pbEvent.id), 
+          type: 'photobooth', 
+          name: pbEvent.name, 
+          subtitle: 'Queue App',
+          eventCode: pbEvent.event_code
+        };
+        
+        // Save to localStorage
+        let storedPb: string[] = [];
+        try {
+          const raw = localStorage.getItem('pb_events');
+          if (raw) storedPb = JSON.parse(raw);
+        } catch (_) {}
+        if (!storedPb.includes(code)) {
+          storedPb.push(code);
+          localStorage.setItem('pb_events', JSON.stringify(storedPb));
+        }
+
+        setWorkspaces(prev => {
+          if (!prev.find(w => String(w.id) === String(newWs.id))) return [...prev, newWs];
+          return prev;
+        });
+        
+        handleWorkspaceChange(pbEvent.id, newWs);
+        window.dispatchEvent(new Event('workspace-joined'));
+        alert('Successfully joined queue mode!');
+        
+        // Close modal on success
         setIsLoading(false);
+        setIsJoinModalOpen(false);
+        setJoinCode('');
+        setIsWorkspaceMenuOpen(false);
         return;
       }
+      
+      console.log('Circle found:', circle);
       
       // Join circle
       if (user) {
@@ -365,7 +452,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       }
       
       const newWs: Workspace = { 
-        id: circle.id, 
+        id: String(circle.id), 
         type: 'circle', 
         name: circle.name, 
         subtitle: 'Member',
@@ -373,21 +460,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         slug: circle.slug
       };
       setWorkspaces(prev => {
-        if (!prev.find(w => w.id === newWs.id)) return [...prev, newWs];
+        if (!prev.find(w => String(w.id) === String(newWs.id))) return [...prev, newWs];
         return prev;
       });
       
-      handleWorkspaceChange(circle.id);
+      handleWorkspaceChange(circle.id, newWs);
       window.dispatchEvent(new Event('workspace-joined'));
       alert('Successfully joined mode!');
-    } catch (err: any) {
-      console.error('Error joining mode:', err?.message || err);
-      setErrorMessage(`Error joining mode: ${err?.message || 'Unknown error'}`);
-    } finally {
+      
+      // Close modal on success
       setIsLoading(false);
       setIsJoinModalOpen(false);
       setJoinCode('');
       setIsWorkspaceMenuOpen(false);
+    } catch (err: any) {
+      console.error('Error joining mode:', err?.message || err);
+      setErrorMessage(`Error joining mode: ${err?.message || 'Unknown error'}`);
+      setIsLoading(false);
     }
   };
 
@@ -405,6 +494,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
                 {activeWorkspace.type === 'personal' ? <User className="w-4 h-4" /> : 
                  activeWorkspace.type === 'admin' ? <ShieldAlert className="w-4 h-4" /> : 
+                 activeWorkspace.type === 'photobooth' ? <Camera className="w-4 h-4" /> :
                  <Building2 className="w-4 h-4" />}
               </div>
               <div className="text-left truncate">
@@ -431,20 +521,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     Your Modes
                   </li>
                 
-                {workspaces.map((ws) => (
-                  <li 
-                    key={ws.id}
-                    onClick={() => handleWorkspaceChange(ws.id)}
-                    className={`w-full flex items-center px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${activeWorkspaceId === ws.id ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                  >
-                    {ws.type === 'personal' ? <User className="w-4 h-4 mr-3 text-slate-400" /> : 
-                     ws.type === 'admin' ? <ShieldAlert className="w-4 h-4 mr-3 text-slate-400" /> : 
-                     <Building2 className="w-4 h-4 mr-3 text-slate-400" />}
-                    <div className="text-left truncate">
-                      <span className="block truncate">{ws.name}</span>
-                    </div>
-                  </li>
-                ))}
+                    {workspaces.map((ws) => (
+                      <li 
+                        key={ws.id}
+                        onClick={() => handleWorkspaceChange(ws.id)}
+                        className={`w-full flex items-center px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${String(activeWorkspaceId) === String(ws.id) ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                      >
+                        {ws.type === 'personal' ? <User className="w-4 h-4 mr-3 text-slate-400" /> : 
+                         ws.type === 'admin' ? <ShieldAlert className="w-4 h-4 mr-3 text-slate-400" /> : 
+                         ws.type === 'photobooth' ? <Camera className="w-4 h-4 mr-3 text-slate-400" /> :
+                         <Building2 className="w-4 h-4 mr-3 text-slate-400" />}
+                        <div className="text-left truncate">
+                          <span className="block truncate">{ws.name}</span>
+                        </div>
+                      </li>
+                    ))}
 
                 <li className="h-px bg-slate-100 my-2" />
                 
@@ -529,6 +620,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="w-6 h-6 rounded-md bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
                 {activeWorkspace.type === 'personal' ? <User className="w-3 h-3" /> : 
                  activeWorkspace.type === 'admin' ? <ShieldAlert className="w-3 h-3" /> : 
+                 activeWorkspace.type === 'photobooth' ? <Camera className="w-3 h-3" /> :
                  <Building2 className="w-3 h-3" />}
               </div>
               <span className="text-sm font-semibold text-slate-900 max-w-[100px] truncate">
@@ -561,10 +653,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       <li 
                         key={ws.id}
                         onClick={() => handleWorkspaceChange(ws.id)}
-                        className={`w-full flex items-center px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${activeWorkspaceId === ws.id ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                        className={`w-full flex items-center px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${String(activeWorkspaceId) === String(ws.id) ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
                       >
                         {ws.type === 'personal' ? <User className="w-4 h-4 mr-3 text-slate-400" /> : 
                          ws.type === 'admin' ? <ShieldAlert className="w-4 h-4 mr-3 text-slate-400" /> : 
+                         ws.type === 'photobooth' ? <Camera className="w-4 h-4 mr-3 text-slate-400" /> :
                          <Building2 className="w-4 h-4 mr-3 text-slate-400" />}
                         <div className="text-left truncate">
                           <span className="block truncate">{ws.name}</span>

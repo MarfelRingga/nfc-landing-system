@@ -70,11 +70,21 @@ export async function POST(request: Request) {
       if (error.code === '23505') {
         return NextResponse.json({ error: 'This token already exists.' }, { status: 400 });
       }
-      throw error;
+      
+      const { sendTelegramNotification } = await import('@/lib/sendTelegram');
+      await sendTelegramNotification(`💥 <b>API Error (Admin Tags Insert)</b>\n\n<b>Error:</b>\n<pre>${error.message}</pre>\n<b>Code:</b> ${error.code}\n\n<b>Hint:</b> If code is 42501, your SUPABASE_SERVICE_ROLE_KEY might be invalid or missing, leading to an RLS policy violation. Please check your environment variables!`);
+
+      console.error('[Admin Tags API] DB Insert Error:', error.message);
+      return NextResponse.json({ error: 'Database error. Details sent to admin.' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error('Admin create tag error:', error);
+    try {
+      const { sendTelegramNotification } = await import('@/lib/sendTelegram');
+      await sendTelegramNotification(`💥 <b>API Error (Admin Tags POST)</b>\n\n<b>Error:</b>\n<pre>${error.message}</pre>`);
+    } catch(e) {}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

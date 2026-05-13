@@ -24,6 +24,9 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 
+import { decodeMessageSettings } from '@/lib/messageSettings';
+import { getPlatformInfo } from '@/lib/platforms';
+
 export default function LandingPage() {
   const [contactLink, setContactLink] = useState('mailto:support@rifelo.com');
   const [getYoursNowLink, setGetYoursNowLink] = useState('/rifelo');
@@ -34,6 +37,19 @@ export default function LandingPage() {
   const [resonanceStatus, setResonanceStatus] = useState<'idle' | 'activating' | 'merged'>('idle');
   const [activeIndexes, setActiveIndexes] = useState<number[]>([0, 1]); // initial 2 members active state
   const [mounted, setMounted] = useState(false);
+  const [demoProfile, setDemoProfile] = useState<any>(null);
+  const [showDemoMessage, setShowDemoMessage] = useState(true);
+  const [demoCircleMembers, setDemoCircleMembers] = useState<any[]>([]);
+
+  const getDemoMemberName = (index: number) => {
+    const defaultNames = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+    if (demoCircleMembers && demoCircleMembers[index] && demoCircleMembers[index].profiles) {
+      if (index === 0) return 'You'; // Always show 'You' for the first dot on demo
+      const profile = demoCircleMembers[index].profiles;
+      return profile.full_name || profile.username || defaultNames[index];
+    }
+    return defaultNames[index];
+  };
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -107,7 +123,50 @@ export default function LandingPage() {
       }
     };
 
+    const fetchDemoProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*, profile_links(*)')
+          .ilike('username', 'marfel')
+          .maybeSingle();
+
+        if (data) {
+          const links = data.profile_links || [];
+          links.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+          data.profile_links = links.filter((l: any) => l.is_visible !== false);
+          
+          const decodedSettings = decodeMessageSettings(data.message_placeholder_name || '');
+          setShowDemoMessage(decodedSettings.isEnabled);
+          
+          setDemoProfile(data);
+        }
+      } catch (err) {}
+    };
+
+    const fetchDemoCircle = async () => {
+      try {
+        const { data: circle } = await supabase
+          .from('circles')
+          .select('id')
+          .eq('slug', 'rifelo')
+          .maybeSingle();
+        if (circle?.id) {
+          const { data: members } = await supabase
+            .from('circle_members')
+            .select('profile_id, profiles(full_name, username)')
+            .eq('circle_id', circle.id)
+            .limit(6);
+          if (members && members.length > 0) {
+            setDemoCircleMembers(members);
+          }
+        }
+      } catch (err) {}
+    };
+
     fetchSettings();
+    fetchDemoProfile();
+    fetchDemoCircle();
   }, []);
 
   useEffect(() => {
@@ -198,7 +257,7 @@ export default function LandingPage() {
 
             {/* Center: Button */}
             <AnimatePresence mode="popLayout">
-              {mounted && !isConnected && (
+              {!isConnected && (
                 <motion.div 
                   key="connect-btn-old"
                   layout
@@ -354,10 +413,10 @@ export default function LandingPage() {
                {/* Browser Header (Circle Demo) */}
                <div className="w-full bg-[#1A1A1A] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-white/5">
                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-[#0c0e0b] rounded-b-xl max-w-[120px] pointer-events-none"></div>
-                 <div className="w-full bg-white/5 rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
+                 <Link href="/c/rifelo" className="w-full cursor-pointer bg-white/5 hover:bg-white/10 transition-colors rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
                    <Lock className="w-2 h-2 text-white/40 mr-1.5" />
                    <span className="text-[9px] text-white/60 font-medium tracking-wide">rifelo.id/c/rifelo</span>
-                 </div>
+                 </Link>
                </div>
 
                <AnimatePresence mode="wait">
@@ -426,9 +485,9 @@ export default function LandingPage() {
                       <div className="w-full flex flex-col items-center gap-2 mb-6 shrink-0">
                         {[0, 1, 2, 3, 4, 5].map((i) => {
                             const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                            const names = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
                             const isActive = activeIndexes.includes(i);
                             const color = colors[i];
+                            const memberName = getDemoMemberName(i);
                             
                             return (
                               <div key={i} className="flex items-center gap-2.5">
@@ -440,7 +499,7 @@ export default function LandingPage() {
                                   }}
                                 />
                                 <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
-                                  {names[i]}
+                                  {memberName}
                                 </span>
                               </div>
                             );
@@ -526,7 +585,7 @@ export default function LandingPage() {
                             const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
                             const color = colors[i];
                             const isActive = activeIndexes.includes(i);
-                            const names = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+                            const memberName = getDemoMemberName(i);
                             
                             return (
                               <div
@@ -546,7 +605,7 @@ export default function LandingPage() {
                                 {/* Tooltip */}
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                   <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
-                                    {names[i]}
+                                    {memberName}
                                   </span>
                                 </div>
                               </div>
@@ -581,9 +640,9 @@ export default function LandingPage() {
                       <div className="w-full flex flex-col items-center gap-2 pb-6 shrink-0 z-20">
                         {[0, 1, 2, 3, 4, 5].map((i) => {
                           const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                          const names = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
                           const isActive = activeIndexes.includes(i);
                           const color = colors[i];
+                          const memberName = getDemoMemberName(i);
                           
                           return (
                             <div key={i} className="flex items-center gap-2.5">
@@ -595,7 +654,7 @@ export default function LandingPage() {
                                 }}
                               />
                               <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
-                                {names[i]}
+                                {memberName}
                               </span>
                             </div>
                           );
@@ -693,108 +752,114 @@ export default function LandingPage() {
                 {/* Browser Header (Identity Demo) */}
                 <div className="w-full bg-[#f8f9fa] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-[#aaafbc]/20">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-white rounded-b-xl max-w-[120px] pointer-events-none"></div>
-                  <div className="w-full bg-white rounded-md py-1 flex items-center justify-center mt-1 border border-[#aaafbc]/10 shadow-sm">
+                  <Link href="/u/marfel" className="w-full bg-white hover:bg-slate-50 transition-colors rounded-md py-1 flex items-center justify-center mt-1 border border-[#aaafbc]/10 shadow-sm cursor-pointer">
                     <Lock className="w-2 h-2 text-[#aaafbc] mr-1.5" />
                     <span className="text-[9px] text-[#0c0e0b]/70 font-medium tracking-wide">rifelo.id/u/marfel</span>
-                  </div>
+                  </Link>
                 </div>
                 
                 {/* Public Profile Lookalike */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-3 font-sans scrollbar-hide">
+                  
                   <div className="w-full bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-5 space-y-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Marfel Ringga P</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">{demoProfile?.full_name || 'Marfel Ringga P'}</h1>
                         <p className="text-[11px] text-slate-500 mt-1">
-                          Founder at Rifelo
+                          {demoProfile?.job_title ? `${demoProfile.job_title} at ${demoProfile.company || 'Rifelo'}` : 'Founder at Rifelo'}
                         </p>
                       </div>
                     </div>
                     
                     {/* Bio */}
-                    <div className="space-y-2">
-                      <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider">About</h2>
-                      <p className="text-[11px] text-slate-700 leading-relaxed whitespace-pre-wrap">Your profile is always ready. Share your name, links, social media, or anything that represents you — all in one simple page. No need to repeat yourself.</p>
-                    </div>
+                    {(demoProfile?.bio || !demoProfile) && (
+                      <div className="space-y-2">
+                        <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider">About</h2>
+                        <p className="text-[11px] text-slate-700 leading-relaxed whitespace-pre-wrap">{demoProfile?.bio || 'Your profile is always ready. Share your name, links, social media, or anything that represents you — all in one simple page. No need to repeat yourself.'}</p>
+                      </div>
+                    )}
 
                     {/* Details */}
                     <div className="grid grid-cols-1 gap-2">
                       <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <Briefcase className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                        <span className="text-[11px] truncate">Rifelo</span>
+                        <span className="text-[11px] truncate">{demoProfile?.company || 'Rifelo'}</span>
                       </div>
-                      <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <Mail className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                        <span className="text-[11px] truncate">support@rifelo.com</span>
-                      </div>
+                      {(demoProfile?.email || !demoProfile) && (
+                        <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <Mail className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
+                          <span className="text-[11px] truncate">{demoProfile?.email || 'support@rifelo.com'}</span>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Links */}
                     <div className="space-y-3">
                       <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider">Platforms & Links</h2>
                       <div className="space-y-2">
-                        {/* Link 1 */}
-                        <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm text-[#E1306C]">
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.88z"/>
-                              </svg>
+                        {demoProfile?.profile_links ? demoProfile.profile_links.map((link: any, idx: number) => {
+                          const platformInfo = getPlatformInfo(link.title, link.url);
+                          const Icon = platformInfo?.icon || LinkIcon;
+                          const iconColor = platformInfo?.color || 'text-slate-600';
+                          const displayUrl = platformInfo?.username || link.url.replace(/^https?:\/\//,'');
+
+                          return (
+                            <div key={link.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                              <div className="flex items-center break-all text-ellipsis overflow-hidden">
+                                <div className={`w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm shrink-0 ${iconColor}`}>
+                                  <Icon className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col overflow-hidden">
+                                  <span className="font-bold text-slate-900 text-[11px] truncate">{link.title}</span>
+                                  <span className="text-[9px] text-slate-500 truncate">{displayUrl}</span>
+                                </div>
+                              </div>
+                              <LinkIcon className="w-3 h-3 text-slate-300 shrink-0 ml-1" />
                             </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 text-[11px]">Instagram</span>
-                              <span className="text-[9px] text-slate-500">@rifelo.id</span>
+                          );
+                        }) : (
+                          <>
+                            {/* Fallback Static Links if not loaded */}
+                            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                              <div className="flex items-center">
+                                <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm text-[#E1306C]">
+                                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.88z"/>
+                                  </svg>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-slate-900 text-[11px]">Instagram</span>
+                                  <span className="text-[9px] text-slate-500">@rifelo.id</span>
+                                </div>
+                              </div>
+                              <LinkIcon className="w-3 h-3 text-slate-300" />
                             </div>
-                          </div>
-                          <LinkIcon className="w-3 h-3 text-slate-300" />
-                        </div>
-                        
-                        {/* Link 2 */}
-                        <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm text-[#E1306C]">
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.88z"/>
-                              </svg>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 text-[11px]">Instagram</span>
-                              <span className="text-[9px] text-slate-500">@marfel_ringga</span>
-                            </div>
-                          </div>
-                          <LinkIcon className="w-3 h-3 text-slate-300" />
-                        </div>
-                        
-                        {/* Link 3 */}
-                        <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm text-emerald-500">
-                              <MessageCircle className="w-4 h-4" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 text-[11px]">WhatsApp</span>
-                              <span className="text-[9px] text-slate-500">628xxxxxxxxx</span>
-                            </div>
-                          </div>
-                          <LinkIcon className="w-3 h-3 text-slate-300" />
-                        </div>
-  
-                        {/* Link 4 */}
-                        <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm text-slate-600">
-                              <Globe className="w-4 h-4" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 text-[11px]">Website</span>
-                              <span className="text-[9px] text-slate-500">rifelo.id</span>
-                            </div>
-                          </div>
-                          <LinkIcon className="w-3 h-3 text-slate-300" />
-                        </div>
+                          </>
+                        )}
                       </div>
                     </div>
+
+                    {/* Conditional Message Area */}
+                    <AnimatePresence>
+                      {showDemoMessage && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="pt-4 border-t border-slate-100 overflow-hidden"
+                        >
+                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider mb-2">Send a Message</h2>
+                            <div className="space-y-2">
+                               <input type="text" placeholder={demoProfile?.message_placeholder_name || "Your Name (Optional)"} className="w-full text-[10px] p-2 rounded-lg border border-slate-200 bg-white" disabled />
+                               <textarea placeholder={demoProfile?.message_placeholder_content || "Write a secret message..."} className="w-full text-[10px] p-2 rounded-lg border border-slate-200 bg-white resize-none" rows={2} disabled />
+                               <button disabled className="w-full bg-slate-200 text-slate-400 py-2 rounded-lg text-[10px] font-bold">Send Message</button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>

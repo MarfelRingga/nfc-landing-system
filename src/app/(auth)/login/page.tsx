@@ -33,6 +33,12 @@ function LoginForm() {
     setError(null);
 
     try {
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        setError('Konfigurasi Supabase tidak ditemukan. Silakan hubungi admin atau periksa Secrets Anda.');
+        setIsLoading(false);
+        return;
+      }
+
       if (rememberMe) {
         localStorage.setItem('rememberedIdentifier', identifier);
       } else {
@@ -65,7 +71,12 @@ function LoginForm() {
         router.push(redirectUrl);
       }
     } catch (err: any) {
-      setError('Gagal masuk. Silakan periksa kembali kredensial Anda dan coba lagi.');
+      console.error('Login error detail:', err);
+      if (err.message === 'Failed to fetch') {
+        setError('Koneksi ke server gagal. Harap pastikan Supabase URL dan API Key sudah dikonfigurasi dengan benar di Secrets.');
+      } else {
+        setError('Gagal masuk. Silakan periksa kembali kredensial Anda dan coba lagi.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +172,10 @@ function LoginForm() {
               className="flex w-full justify-center items-center rounded-xl bg-[#1A1A1A] px-3 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#0c0e0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
-              {isLoading ? 'Signing in...' : 'Sign in'}
+                <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
+              ) : (
+                'Sign in'
+              )}
             </button>
           </div>
         </form>

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ExternalLink, Plus, Trash2, CheckCircle2, Loader2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Globe } from 'lucide-react';
+import { Save, ExternalLink, Plus, Trash2, CheckCircle2, Loader2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Globe, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getPlatformInfo } from '@/lib/platforms';
 import { revalidateProfile } from '@/app/actions/revalidate';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { encodeMessageSettings, decodeMessageSettings } from '@/lib/messageSettings';
 
 interface CustomLink {
   id: string;
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const [expandedLinks, setExpandedLinks] = useState<Record<string, boolean>>({});
   const [messagePlaceholderName, setMessagePlaceholderName] = useState('Your Name (Optional)');
   const [messagePlaceholderContent, setMessagePlaceholderContent] = useState('Write a secret message...');
+  const [allowMessages, setAllowMessages] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -80,7 +82,11 @@ export default function ProfilePage() {
         setEmail(profile.email || '');
         setBio(profile.bio || '');
         setIsPublic(profile.is_public !== false);
-        setMessagePlaceholderName(profile.message_placeholder_name || 'Your Name (Optional)');
+        
+        const decodedSettings = decodeMessageSettings(profile.message_placeholder_name || 'Your Name (Optional)');
+        setAllowMessages(decodedSettings.isEnabled);
+        setMessagePlaceholderName(decodedSettings.cleanName);
+        
         setMessagePlaceholderContent(profile.message_placeholder_content || 'Write a secret message...');
       }
 
@@ -108,7 +114,7 @@ export default function ProfilePage() {
   // --- HANDLERS ---
   const handleAddLink = () => {
     const newId = crypto.randomUUID();
-    setLinks([...links, { id: newId, title: '', url: '' }]);
+    setLinks([{ id: newId, title: '', url: '' }, ...links]);
     setExpandedLinks(prev => ({ ...prev, [newId]: true }));
   };
 
@@ -252,6 +258,7 @@ export default function ProfilePage() {
 
       // 1. UPSERT Profile
       // Note: We don't send updated_at because the database trigger handles it automatically now.
+      const encodedMessageName = encodeMessageSettings(messagePlaceholderName, allowMessages);
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
@@ -263,7 +270,7 @@ export default function ProfilePage() {
           email: email,
           bio: bio,
           is_public: isPublic,
-          message_placeholder_name: messagePlaceholderName,
+          message_placeholder_name: encodedMessageName,
           message_placeholder_content: messagePlaceholderContent
         });
 
@@ -410,10 +417,10 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Job Title</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Headline</label>
             <input 
               type="text" 
-              placeholder="Role or job title"
+              placeholder="Role, major, or title"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -423,10 +430,10 @@ export default function ProfilePage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Organization</label>
             <input 
               type="text" 
-              placeholder="Company name" 
+              placeholder="Company, school, or club" 
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
@@ -448,7 +455,7 @@ export default function ProfilePage() {
           <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
           <textarea 
             rows={3} 
-            placeholder="Tell people about yourself..."
+            placeholder="A short bio about yourself..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all resize-none"
@@ -476,7 +483,7 @@ export default function ProfilePage() {
             {links.map((link) => {
               const isExpanded = expandedLinks[link.id];
               const platformInfo = getPlatformInfo(link.title || '', link.url || '');
-              const Icon = platformInfo ? platformInfo.icon : Globe;
+              const isUrl = link.url?.startsWith('http://') || link.url?.startsWith('https://');
               
               return (
                 <div key={link.id} className="flex flex-col bg-slate-50 rounded-xl border border-slate-200 group relative overflow-hidden transition-all">
@@ -488,7 +495,9 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-3 flex-1 overflow-hidden">
                       <div className={`w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 ${platformInfo ? platformInfo.color : 'text-slate-400'}`}>
                         {platformInfo ? (
-                          <Icon className="w-4 h-4" />
+                          <platformInfo.icon className="w-4 h-4" />
+                        ) : isUrl ? (
+                          <LinkIcon className="w-4 h-4" />
                         ) : (
                           <span className="text-xs font-bold text-slate-400">
                             {link.title ? link.title.charAt(0).toUpperCase() : '#'}
@@ -547,7 +556,7 @@ export default function ProfilePage() {
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
                             <input 
                               type="text" 
-                              placeholder="Platform name or link title" 
+                              placeholder="Instagram, Portfolio, WhatsApp..." 
                               value={link.title}
                               onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
                               className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
@@ -557,7 +566,7 @@ export default function ProfilePage() {
                             <label className="block text-xs font-medium text-slate-700 mb-1.5">Text / Value</label>
                             <input 
                               type="text" 
-                              placeholder="Link, username, or phone" 
+                              placeholder="URL or Username" 
                               value={link.url}
                               onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
                               onBlur={() => handleLinkBlur(link.id)}
@@ -582,12 +591,30 @@ export default function ProfilePage() {
 
         {/* Message Box Settings Section */}
         <div className="pt-6 border-t border-slate-100">
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Message Box Settings</h3>
-            <p className="text-xs text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
+          <div className="mb-4 flex flex-col sm:flex-row justify-between sm:items-center">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Message Box Settings</h3>
+              <p className="text-xs text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
+            </div>
+            <div className="mt-4 sm:mt-0 flex items-center shrink-0">
+              <span className="mr-3 text-sm font-medium text-slate-900">Enable Message Box</span>
+              <button
+                type="button"
+                onClick={() => setAllowMessages(!allowMessages)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  allowMessages ? 'bg-emerald-500' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    allowMessages ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${allowMessages ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Name Input Placeholder</label>
               <input 
@@ -595,7 +622,8 @@ export default function ProfilePage() {
                 placeholder="Your Name (Optional)" 
                 value={messagePlaceholderName}
                 onChange={(e) => setMessagePlaceholderName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
+                disabled={!allowMessages}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all disabled:bg-slate-100" 
               />
             </div>
             <div>
@@ -605,7 +633,8 @@ export default function ProfilePage() {
                 placeholder="Write a secret message..." 
                 value={messagePlaceholderContent}
                 onChange={(e) => setMessagePlaceholderContent(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
+                disabled={!allowMessages}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all disabled:bg-slate-100" 
               />
             </div>
           </div>

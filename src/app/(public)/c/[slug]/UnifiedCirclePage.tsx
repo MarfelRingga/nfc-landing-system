@@ -557,6 +557,17 @@ export default function UnifiedCirclePage({
 
   return (
     <div className="min-h-screen bg-[#0c0e0b] flex flex-col items-center justify-center py-12 px-4 sm:px-6 font-sans relative overflow-hidden">
+      
+      {/* Top Active Indicator */}
+      <div className="absolute top-0 left-0 right-0 p-6 pt-10 flex justify-center items-center z-50">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
+            {publicActiveCount} / {members.length} Active
+          </span>
+        </div>
+      </div>
+
       <div className="relative z-10 flex flex-col items-center w-full max-w-md">
         
         {/* Header */}
@@ -564,8 +575,8 @@ export default function UnifiedCirclePage({
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-widest uppercase mb-2">
             {(circle.name || 'Untitled').split('\n').join(' ')}
           </h1>
-          <p className="text-xs text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
-            Private Circle Member
+          <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
+            Live Presence Space
           </p>
         </div>
 
@@ -630,9 +641,16 @@ export default function UnifiedCirclePage({
           })}
           {members.length === 0 && (
             <span className="text-xs font-medium tracking-widest uppercase text-white/30">
-              No members yet
+              Empty Space
             </span>
           )}
+        </div>
+
+        {/* Contextual Focus */}
+        <div className="w-full max-w-xs mx-auto flex flex-col items-center text-center opacity-40">
+          <p className="text-white text-[9px] uppercase tracking-[0.2em] font-black leading-loose">
+            Observing Resonance
+          </p>
         </div>
       </div>
     </div>

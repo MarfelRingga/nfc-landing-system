@@ -14,8 +14,8 @@ import {
 const modules = [
   {
     id: 'photobooth',
-    title: 'Smart Photobooth',
-    description: 'AI-powered photo experiences with instant digital delivery and branded overlays.',
+    title: 'Custom Queue System',
+    description: 'Versatile queue management system with custom standalone displays, admin controls, and customer tracking.',
     icon: Camera,
     colSpan: 'md:col-span-2',
     rowSpan: 'md:row-span-2',

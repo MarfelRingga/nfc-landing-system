@@ -48,6 +48,24 @@ export async function PUT(
 
     // Join circle automatically
     if (circleId) {
+      // Ensure profile exists first to satisfy foreign key
+      const { data: profileCheck } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profileCheck) {
+        await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            username: user.user_metadata?.username || `user_${user.id.slice(0, 5)}`,
+            phone: user.phone || null
+          });
+      }
+
       await supabaseAdmin
         .from('circle_members')
         .upsert({
@@ -62,7 +80,7 @@ export async function PUT(
     console.error('Update Tag API Error:', error);
     try {
       const { sendTelegramNotification } = await import('@/lib/sendTelegram');
-      await sendTelegramNotification(`💥 *API Error (Tags Update)*\n\n*Error:*\n${error.message}`);
+      await sendTelegramNotification(`💥 <b>API Error (Tags Update)</b>\n\n<b>Error:</b>\n<pre>${error.message}</pre>\n<b>Code:</b> ${error.code || 'unknown'}`);
     } catch(e) {}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -108,7 +126,7 @@ export async function DELETE(
     console.error('Delete Tag API Error:', error);
     try {
       const { sendTelegramNotification } = await import('@/lib/sendTelegram');
-      await sendTelegramNotification(`💥 *API Error (Tags Detach)*\n\n*Error:*\n${error.message}`);
+      await sendTelegramNotification(`💥 <b>API Error (Tags Detach)</b>\n\n<b>Error:</b>\n<pre>${error.message}</pre>\n<b>Code:</b> ${error.code || 'unknown'}`);
     } catch(e) {}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

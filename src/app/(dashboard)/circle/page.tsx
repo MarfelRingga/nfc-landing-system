@@ -12,77 +12,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
-const hexToRgb = (hex: string) => {
-  let r = 0, g = 0, b = 0;
-  const cleanHex = hex.replace('#', '');
-  if (cleanHex.length === 3) {
-    r = parseInt(cleanHex[0] + cleanHex[0], 16);
-    g = parseInt(cleanHex[1] + cleanHex[1], 16);
-    b = parseInt(cleanHex[2] + cleanHex[2], 16);
-  } else if (cleanHex.length === 6) {
-    r = parseInt(cleanHex.substring(0, 2), 16);
-    g = parseInt(cleanHex.substring(2, 4), 16);
-    b = parseInt(cleanHex.substring(4, 6), 16);
-  }
-  return [isNaN(r) ? 0 : r, isNaN(g) ? 0 : g, isNaN(b) ? 0 : b];
-};
-
-const rgbToHsl = (r: number, g: number, b: number) => {
-  r /= 255; g /= 255; b /= 255;
-  let max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0, l = (max + min) / 2;
-  if (max !== min) {
-    let d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return [h, s, l];
-};
-
-const hslToRgb = (h: number, s: number, l: number) => {
-  let r, g, b;
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    let p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
-  }
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-};
-
-const rgbToHex = (r: number, g: number, b: number) => {
-  return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).padStart(6, '0');
-};
-
-const getLightness = (hex: string) => {
-  const [r, g, b] = hexToRgb(hex);
-  const [, , l] = rgbToHsl(r, g, b);
-  return Math.round(l * 100);
-};
-
-const setLightness = (hex: string, newL: number) => {
-  const [r, g, b] = hexToRgb(hex);
-  const [h, s] = rgbToHsl(r, g, b);
-  const [nR, nG, nB] = hslToRgb(h, s, newL / 100);
-  return rgbToHex(nR, nG, nB);
-};
-
 const CircleNameDisplay = ({ name, isVisible }: { name: string, isVisible: boolean }) => {
   const lines = (name || 'Untitled').split('\n').slice(0, 3);
   
@@ -136,8 +65,13 @@ export default function CircleManagementPage() {
   // Roster State
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [origin, setOrigin] = useState('');
   
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   // Dropdown States
   const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
@@ -465,7 +399,7 @@ if (!activeCircle) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
       <AlertCircle className="w-12 h-12 mb-4 text-slate-300" />
-      <p>Circle not found or you do not have access.</p>
+      <p>This space is hidden or unavailable.</p>
     </div>
   );
 }
@@ -475,19 +409,49 @@ return (
     {/* Header */}
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
           <h1 className="text-xl md:text-2xl font-bold text-slate-900">{activeCircle.name}</h1>
         </div>
-        <p className="text-sm text-slate-500">Manage your circle's identity and members.</p>
+        <p className="text-sm text-slate-500">Shape your circle's appearance and resonance.</p>
       </div>
       
-      <div className="flex items-center gap-3 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-2 px-3 py-2 sm:py-1 bg-slate-100 rounded-xl sm:rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">INVITE CODE</span>
+            <span className="text-slate-900 text-sm font-mono font-bold tracking-widest">
+              {activeCircle.invite_code}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-px h-4 bg-slate-200 mx-1 hidden sm:block"></div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(activeCircle.invite_code);
+                setSaveSuccess(true);
+                setTimeout(() => setSaveSuccess(false), 2000);
+              }}
+              className="p-1 text-slate-400 hover:text-slate-900 transition-colors rounded-md hover:bg-slate-200"
+              title="Copy Code"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleRegenerateCode}
+              disabled={isSaving}
+              className="p-1 text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50 rounded-md hover:bg-slate-200"
+              title="Reset Code"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
         <Link
           href={`/c/${activeCircle.slug || activeCircle.invite_code}`}
-          className="flex items-center justify-center w-full sm:w-auto px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-sm sm:shadow-none"
+          className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          Enter Sanctuary
+          View Resonance
         </Link>
       </div>
     </div>
@@ -495,8 +459,8 @@ return (
     {/* Navigation Tabs */}
     <div className="relative inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200/50 w-full sm:w-auto min-w-[300px] overflow-hidden">
       {[
-        { id: 'identity', label: 'Identity', icon: Palette },
-        { id: 'roster', label: 'Member', icon: Users }
+        { id: 'identity', label: 'Atmosphere', icon: Palette },
+        { id: 'roster', label: 'People', icon: Users }
       ].map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -533,76 +497,31 @@ return (
           transition={{ duration: 0.4 }}
           className="space-y-6"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full">
-                <h2 className="text-lg font-bold text-slate-900 mb-6">Circle Profile</h2>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Circle Name</label>
-                    <textarea 
-                      value={circleName}
-                      onChange={(e) => {
-                        const lines = e.target.value.split('\n');
-                        if (lines.length <= 3) {
-                          setCircleName(e.target.value);
-                        }
-                      }}
-                      rows={3}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
-                    <textarea 
-                      value={circleDescription}
-                      onChange={(e) => setCircleDescription(e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm resize-none"
-                    />
-                  </div>
-                </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-6">General Details</h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Circle Name</label>
+                <textarea 
+                  value={circleName}
+                  onChange={(e) => {
+                    const lines = e.target.value.split('\n');
+                    if (lines.length <= 3) {
+                      setCircleName(e.target.value);
+                    }
+                  }}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm resize-none"
+                />
               </div>
-            </div>
-            
-            <div className="lg:col-span-1">
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-center">
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Public Link</label>
-                    <div className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 sm:text-sm font-mono break-all">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/c/${activeCircle.slug}` : `/c/${activeCircle.slug}`}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Invite Code</label>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 flex items-center justify-between px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl">
-                        <span className="text-slate-900 sm:text-sm font-mono font-bold tracking-widest">
-                          {activeCircle.invite_code}
-                        </span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(activeCircle.invite_code);
-                            setSaveSuccess(true);
-                            setTimeout(() => setSaveSuccess(false), 2000);
-                          }}
-                          className="text-slate-400 hover:text-slate-600 transition-colors"
-                          title="Copy Invite Code"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <button
-                        onClick={handleRegenerateCode}
-                        disabled={isSaving}
-                        className="px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors whitespace-nowrap disabled:opacity-50"
-                      >
-                        Revoke
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">About</label>
+                <textarea 
+                  value={circleDescription}
+                  onChange={(e) => setCircleDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm resize-none"
+                />
               </div>
             </div>
           </div>
@@ -610,9 +529,9 @@ return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                  <h2 className="text-lg font-bold text-slate-900">Visual Identity</h2>
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                <div className="flex flex-row justify-between items-center gap-4 mb-6">
+                  <h2 className="text-lg font-bold text-slate-900">Resonance & Aura</h2>
+                  <div className="flex items-center gap-3">
                     {saveError && (
                       <span className="flex items-center text-sm text-red-600 font-medium animate-in fade-in slide-in-from-right-4">
                         <AlertCircle className="w-4 h-4 mr-1.5" />
@@ -631,76 +550,39 @@ return (
                       className="flex items-center px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50"
                     >
                       {isSaving ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                      Save Changes
+                      Save
                     </button>
                   </div>
                 </div>
                 
                 <div className="space-y-6 flex-1">
-                  <div className="max-w-md">
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Resonance Color (Circle Theme)</label>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200">
-                        <input 
-                          type="color" 
-                          value={resonanceColor}
-                          onChange={(e) => setResonanceColor(e.target.value)}
-                          className="w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer border-0 p-0"
-                        />
-                      </div>
+                  <div className="max-w-md flex items-center gap-4">
+                    <label className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-slate-200/50 cursor-pointer block shadow-sm hover:scale-105 transition-transform relative">
                       <input 
-                        type="text" 
+                        type="color" 
                         value={resonanceColor}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^a-zA-Z0-9#]/g, '');
-                          setResonanceColor(val);
-                        }}
-                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm font-mono"
+                        onChange={(e) => setResonanceColor(e.target.value)}
+                        className="w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer border-0 p-0 absolute top-0 left-0"
                       />
+                    </label>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-900">Circle Resonance</span>
+                      <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">{resonanceColor}</span>
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-slate-100">
-                    <div className="max-w-md">
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">Aura Color (Personal)</label>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200">
-                          <input 
-                            type="color" 
-                            value={myColor}
-                            onChange={(e) => setMyColor(e.target.value)}
-                            className="w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer border-0 p-0"
-                          />
-                        </div>
-                        <input 
-                          type="text" 
-                          value={myColor}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/[^a-zA-Z0-9#]/g, '');
-                            setMyColor(val);
-                          }}
-                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all sm:text-sm font-mono"
-                        />
-                      </div>
-                      
-                      <div className="px-1">
-                        <div className="flex justify-between text-xs font-medium text-slate-500 mb-2">
-                          <span>Dark</span>
-                          <span>Brightness</span>
-                          <span>Light</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={getLightness(myColor)}
-                          onChange={(e) => {
-                            const newHex = setLightness(myColor, parseInt(e.target.value));
-                            setMyColor(newHex);
-                          }}
-                          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-                        />
-                      </div>
+                  <div className="max-w-md flex items-center gap-4 pt-6 border-t border-slate-100">
+                    <label className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-slate-200/50 cursor-pointer block shadow-sm hover:scale-105 transition-transform relative">
+                      <input 
+                        type="color" 
+                        value={myColor}
+                        onChange={(e) => setMyColor(e.target.value)}
+                        className="w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer border-0 p-0 absolute top-0 left-0"
+                      />
+                    </label>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-900">Personal Aura</span>
+                      <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">{myColor}</span>
                     </div>
                   </div>
                 </div>
@@ -709,7 +591,7 @@ return (
             
             <div className="lg:col-span-1">
               <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col items-center justify-center h-full min-h-[300px]">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-6 absolute top-6 left-6 z-50">Resonance Preview</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-12 z-50">Resonance Preview</h3>
                 
                 <div className="relative w-40 h-40 flex items-center justify-center z-10">
                   {/* Base Glow */}
@@ -883,7 +765,7 @@ return (
           {filteredMembers.length === 0 && (
             <tr>
               <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                No members found.
+                No people found.
               </td>
             </tr>
           )}

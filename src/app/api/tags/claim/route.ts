@@ -66,6 +66,24 @@ export async function POST(request: Request) {
 
     // If tag has a circle_id, join the user to that circle automatically
     if (tag.circle_id) {
+      // Ensure profile exists first to satisfy foreign key
+      const { data: profileCheck } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profileCheck) {
+        await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            username: user.user_metadata?.username || `user_${user.id.slice(0, 5)}`,
+            phone: user.phone || null
+          });
+      }
+
       await supabaseAdmin
         .from('circle_members')
         .upsert({
@@ -82,7 +100,7 @@ export async function POST(request: Request) {
     // Send Telegram Notification
     try {
       const { sendTelegramNotification } = await import('@/lib/sendTelegram');
-      await sendTelegramNotification(`💥 *API Error (Tags Claim)*\n\n*Error:*\n${error.message}\n\n*Token:*\n${error.stack ? error.stack.slice(0, 150) : '-'}`);
+      await sendTelegramNotification(`💥 <b>API Error (Tags Claim)</b>\n\n<b>Error:</b>\n<pre>${error.message}</pre>\n<b>Code:</b> ${error.code || 'unknown'}\n\n<b>Stack:</b>\n<pre>${error.stack ? error.stack.slice(0, 150) : '-'}</pre>`);
     } catch(e) {}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
