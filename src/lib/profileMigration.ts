@@ -36,7 +36,7 @@ export function getFieldMapping(fromMode: ProfileMode, toMode: ProfileMode): Rec
     // User requested: casual whatsapp -> professional email (if they put an email in it or as fallback)
     // However, since it's a phone, it might not be a valid email. We'll map it to email as requested
     // but the UI will handle validation.
-    mapping.phone = 'email'; 
+    mapping.phone = null;
   }
   
   // PROFESSIONAL -> CASUAL

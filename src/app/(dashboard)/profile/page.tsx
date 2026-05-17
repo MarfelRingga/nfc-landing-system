@@ -16,6 +16,8 @@ import { DynamicProfileForm } from '@/components/profile/DynamicProfileForm';
 import { ModeSwitchConfirmation } from '@/components/profile/ModeSwitchConfirmation';
 import { ProfileMode } from '@/lib/types/profile';
 import { migrateFieldData } from '@/lib/profileMigration';
+import { getValidationErrors } from '@/lib/validation/profileValidation';
+import { getThemesByMode } from '@/lib/themePresets';
 
 interface CustomLink {
   id: string;
@@ -142,11 +144,16 @@ export default function ProfilePage() {
     // Migrate existing data when mode changes
     setDynamicValues(prev => migrateFieldData(profileMode, pendingMode, prev));
     setProfileMode(pendingMode);
-    setShowModeSwitchConfirm(false);
     
-    // Auto-select a compatible theme if current doesn't match
-    // getThemesByMode(pendingMode) ensures the theme is valid for mode, but for simplicity
-    // we let the user re-select or we use default if something breaks.
+    // Auto-switch theme jika tidak kompatibel
+    const compatibleThemes = getThemesByMode(pendingMode);
+    const isCurrentThemeOK = compatibleThemes.find(t => t.id === themePreset);
+    if (!isCurrentThemeOK && compatibleThemes.length > 0) {
+      setThemePreset(compatibleThemes[0].id);
+    }
+    
+    setShowModeSwitchConfirm(false);
+    setPendingMode(null);
   };
 
   // --- HANDLERS ---
@@ -258,6 +265,13 @@ export default function ProfilePage() {
       setIsSaving(true);
       setErrorMsg(null);
       setShowSuccess(false);
+
+      const validationErrors = getValidationErrors(dynamicValues, profileMode as ProfileMode);
+      if (validationErrors.length > 0) {
+        setErrorMsg(validationErrors[0].message);
+        setIsSaving(false);
+        return;
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Authentication required to save.');
