@@ -74,7 +74,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased overflow-x-clip">
         {children}
       </body>
     </html>

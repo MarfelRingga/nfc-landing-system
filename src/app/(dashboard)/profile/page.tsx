@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ExternalLink, Plus, Trash2, CheckCircle2, Loader2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Globe, Link as LinkIcon } from 'lucide-react';
+import { Save, ExternalLink, Plus, Trash2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Link as LinkIcon, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getPlatformInfo } from '@/lib/platforms';
 import { revalidateProfile } from '@/app/actions/revalidate';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { encodeMessageSettings, decodeMessageSettings } from '@/lib/messageSettings';
+
+import { ModeSelector } from '@/components/profile/ModeSelector';
+import { ThemeSelector } from '@/components/profile/ThemeSelector';
+import { DynamicProfileForm } from '@/components/profile/DynamicProfileForm';
+import { ModeSwitchConfirmation } from '@/components/profile/ModeSwitchConfirmation';
+import { ProfileMode } from '@/lib/types/profile';
+import { migrateFieldData } from '@/lib/profileMigration';
 
 interface CustomLink {
   id: string;
@@ -19,6 +26,7 @@ interface CustomLink {
 
 export default function ProfilePage() {
   const router = useRouter();
+
   // --- STATES ---
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -26,18 +34,29 @@ export default function ProfilePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [username, setUsername] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [company, setCompany] = useState('');
-  const [email, setEmail] = useState('');
-  const [bio, setBio] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [links, setLinks] = useState<CustomLink[]>([]);
   const [expandedLinks, setExpandedLinks] = useState<Record<string, boolean>>({});
+  
   const [messagePlaceholderName, setMessagePlaceholderName] = useState('Your Name (Optional)');
   const [messagePlaceholderContent, setMessagePlaceholderContent] = useState('Write a secret message...');
   const [allowMessages, setAllowMessages] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // --- NEW STATES (Multi-Mode) ---
+  const [profileMode, setProfileMode] = useState<ProfileMode>('casual');
+  const [themePreset, setThemePreset] = useState<string>('vibrant');
+  const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
+  const [pendingMode, setPendingMode] = useState<ProfileMode | null>(null);
+
+  const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({
+    full_name: '',
+    job_title: '',
+    company: '',
+    email: '',
+    phone: '',
+    bio: ''
+  });
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -55,49 +74,48 @@ export default function ProfilePage() {
       setErrorMsg(null);
 
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        if (authError.message.includes('Refresh Token Not Found') || authError.message.includes('Invalid Refresh Token')) {
-          await supabase.auth.signOut();
-          router.push('/login');
-          return;
-        }
-        throw new Error('User not authenticated. Please log in again.');
+      if (authError || !user) {
+        await supabase.auth.signOut();
+        router.push('/login');
+        return;
       }
-      if (!user) throw new Error('User not authenticated. Please log in again.');
 
-      // 1. Fetch Profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle(); // maybeSingle prevents error if row doesn't exist yet
+        .maybeSingle();
 
       if (profileError) throw new Error(`Failed to load profile: ${profileError.message}`);
 
       if (profile) {
         setUsername(profile.username || '');
-        setFullName(profile.full_name || '');
-        setJobTitle(profile.job_title || '');
-        setCompany(profile.company || '');
-        setEmail(profile.email || '');
-        setBio(profile.bio || '');
         setIsPublic(profile.is_public !== false);
+        
+        setProfileMode((profile.profile_mode as ProfileMode) || 'casual');
+        setThemePreset(profile.theme_preset || 'vibrant');
+
+        setDynamicValues({
+          full_name: profile.full_name || '',
+          job_title: profile.job_title || '',
+          company: profile.company || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          bio: profile.bio || '',
+        });
         
         const decodedSettings = decodeMessageSettings(profile.message_placeholder_name || 'Your Name (Optional)');
         setAllowMessages(decodedSettings.isEnabled);
         setMessagePlaceholderName(decodedSettings.cleanName);
-        
         setMessagePlaceholderContent(profile.message_placeholder_content || 'Write a secret message...');
       }
 
       // 2. Fetch Links
-      const { data: linksData, error: linksError } = await supabase
+      const { data: linksData } = await supabase
         .from('profile_links')
         .select('*')
         .eq('profile_id', user.id)
         .order('sort_order', { ascending: true });
-
-      if (linksError) throw new Error(`Failed to load links: ${linksError.message}`);
 
       if (linksData) {
         setLinks(linksData.map(l => ({ id: l.id, title: l.title, url: l.url, is_visible: l.is_visible })));
@@ -111,7 +129,31 @@ export default function ProfilePage() {
     }
   };
 
+  // --- MODE SWITCH LOGIC ---
+  const handleModeChange = (newMode: ProfileMode) => {
+    if (newMode === profileMode) return;
+    setPendingMode(newMode);
+    setShowModeSwitchConfirm(true);
+  };
+
+  const confirmModeSwitch = () => {
+    if (!pendingMode) return;
+    
+    // Migrate existing data when mode changes
+    setDynamicValues(prev => migrateFieldData(profileMode, pendingMode, prev));
+    setProfileMode(pendingMode);
+    setShowModeSwitchConfirm(false);
+    
+    // Auto-select a compatible theme if current doesn't match
+    // getThemesByMode(pendingMode) ensures the theme is valid for mode, but for simplicity
+    // we let the user re-select or we use default if something breaks.
+  };
+
   // --- HANDLERS ---
+  const handleFieldChange = (field: string, value: string) => {
+    setDynamicValues(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleAddLink = () => {
     const newId = crypto.randomUUID();
     setLinks([{ id: newId, title: '', url: '' }, ...links]);
@@ -143,44 +185,36 @@ export default function ProfilePage() {
 
     if (!cleaned) return cleaned;
 
-    // Common cleaning for most social platforms
     const socialPlatforms = ['instagram', 'twitter', 'x.com', 'tiktok', 'youtube', 'telegram', 'github', 'facebook', 'linkedin'];
     
     if (socialPlatforms.some(p => lowerTitle.includes(p))) {
-      // Remove @ prefix
       if (cleaned.startsWith('@')) {
         cleaned = cleaned.substring(1);
       }
 
-      // Handle cases where user might have pasted a URL without protocol (e.g. instagram.com/user)
       let urlToParse = cleaned;
       if (!cleaned.startsWith('http') && cleaned.includes('.')) {
         urlToParse = 'https://' + cleaned;
       }
 
-      // If it's a full URL, try to extract the username/ID
       try {
         if (urlToParse.startsWith('http')) {
           const url = new URL(urlToParse);
-          // Only extract if the hostname matches the platform
           const hostname = url.hostname.toLowerCase();
           if (socialPlatforms.some(p => hostname.includes(p))) {
             const pathParts = url.pathname.split('/').filter(p => p.length > 0);
             
             if (hostname.includes('linkedin')) {
-              // LinkedIn usually is /in/username
               if (pathParts[0] === 'in' && pathParts[1]) {
                 cleaned = pathParts[1];
               } else if (pathParts[0]) {
                 cleaned = pathParts[0];
               }
             } else if (hostname.includes('youtube')) {
-              // YouTube handles usually start with @
               if (pathParts[0]) {
                 cleaned = pathParts[0].replace(/^@/, '');
               }
             } else {
-              // Most others are just /username
               if (pathParts[0]) {
                 cleaned = pathParts[0];
               }
@@ -188,13 +222,10 @@ export default function ProfilePage() {
           }
         }
       } catch (e) {
-        // Not a valid URL, keep as is
       }
     }
 
-    // Special handling for WhatsApp
     if (lowerTitle.includes('whatsapp') || lowerTitle.includes('wa.me')) {
-      // Remove everything except numbers
       cleaned = cleaned.replace(/[^0-9]/g, '');
     }
 
@@ -205,16 +236,13 @@ export default function ProfilePage() {
     setLinks(links.map(l => {
       if (l.id === id) {
         let newTitle = l.title;
-        let newUrl = cleanLinkValue(l.title, l.url);
+        let newUrl = cleanLinkValue(l.title, l.url || '');
         
-        // Auto-fill title if empty and platform is detected from URL
         if (!newTitle && newUrl) {
           const platformInfo = getPlatformInfo('', newUrl);
           if (platformInfo) {
-            // Capitalize first letter of platform id
             newTitle = platformInfo.id.charAt(0).toUpperCase() + platformInfo.id.slice(1);
-            // Re-clean URL with the new title context
-            newUrl = cleanLinkValue(newTitle, l.url);
+            newUrl = cleanLinkValue(newTitle, l.url || '');
           }
         }
         
@@ -224,12 +252,6 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow lowercase letters, numbers, dots, and underscores. No spaces.
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '');
-    setUsername(val);
-  };
-
   // --- SAVE LOGIC ---
   const handleSave = async () => {
     try {
@@ -237,18 +259,9 @@ export default function ProfilePage() {
       setErrorMsg(null);
       setShowSuccess(false);
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        if (authError.message.includes('Refresh Token Not Found') || authError.message.includes('Invalid Refresh Token')) {
-          await supabase.auth.signOut();
-          router.push('/login');
-          return;
-        }
-        throw new Error('Authentication required to save.');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Authentication required to save.');
 
-      // Basic Validation
       if (username.length > 0) {
         const usernameRegex = /^[a-z0-9._]{3,30}$/;
         if (!usernameRegex.test(username)) {
@@ -256,36 +269,37 @@ export default function ProfilePage() {
         }
       }
 
-      // 1. UPSERT Profile
-      // Note: We don't send updated_at because the database trigger handles it automatically now.
       const encodedMessageName = encodeMessageSettings(messagePlaceholderName, allowMessages);
+      
+      const payload: any = {
+        id: user.id,
+        username: username || null,
+        full_name: dynamicValues.full_name || '',
+        job_title: dynamicValues.job_title || '',
+        company: dynamicValues.company || '',
+        email: dynamicValues.email || '',
+        phone: dynamicValues.phone || null,
+        bio: dynamicValues.bio || '',
+        profile_mode: profileMode,
+        theme_preset: themePreset,
+        is_public: isPublic,
+        message_placeholder_name: encodedMessageName,
+        message_placeholder_content: messagePlaceholderContent
+      };
+      
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          username: username || null, // Convert empty string to null to avoid unique constraint issues
-          full_name: fullName,
-          job_title: jobTitle,
-          company: company,
-          email: email,
-          bio: bio,
-          is_public: isPublic,
-          message_placeholder_name: encodedMessageName,
-          message_placeholder_content: messagePlaceholderContent
-        });
+        .upsert(payload);
 
       if (profileError) {
-        if (profileError.code === '23505') {
-          throw new Error('This username is already taken. Please choose another one.');
-        }
+        if (profileError.code === '23505') throw new Error('This username is already taken. Please choose another one.');
         throw new Error(`Profile Error: ${profileError.message}`);
       }
 
-      // 2. SYNC Links
+      // Links saving
       const validLinks = links.filter(l => l.title.trim() !== '' || l.url.trim() !== '');
       const validLinkIds = validLinks.map(l => l.id);
 
-      // Step A: Upsert valid links
       if (validLinks.length > 0) {
         const linksToUpsert = validLinks.map((l, index) => ({
           id: l.id,
@@ -295,38 +309,17 @@ export default function ProfilePage() {
           sort_order: index,
           is_visible: l.is_visible !== false
         }));
-
-        const { error: upsertError } = await supabase
-          .from('profile_links')
-          .upsert(linksToUpsert);
-
-        if (upsertError) throw new Error(`Failed to save links: ${upsertError.message}`);
+        await supabase.from('profile_links').upsert(linksToUpsert);
       }
 
-      // Step B: Delete removed links
       if (validLinkIds.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('profile_links')
-          .delete()
-          .eq('profile_id', user.id)
-          .not('id', 'in', `(${validLinkIds.join(',')})`);
-          
-        if (deleteError) throw new Error(`Failed to clear removed links: ${deleteError.message}`);
+        await supabase.from('profile_links').delete().eq('profile_id', user.id).not('id', 'in', `(${validLinkIds.join(',')})`);
       } else {
-        // If no valid links, delete all links for this user
-        const { error: deleteError } = await supabase
-          .from('profile_links')
-          .delete()
-          .eq('profile_id', user.id);
-          
-        if (deleteError) throw new Error(`Failed to clear removed links: ${deleteError.message}`);
+        await supabase.from('profile_links').delete().eq('profile_id', user.id);
       }
 
-      // Success
       setShowSuccess(true);
-      if (username) {
-        await revalidateProfile(username);
-      }
+      if (username) await revalidateProfile(username);
       setTimeout(() => setShowSuccess(false), 3000);
 
     } catch (error: any) {
@@ -338,13 +331,11 @@ export default function ProfilePage() {
   };
 
   // --- RENDER ---
-  if (isLoading) {
-    return <PageSkeleton />;
-  }
+  if (isLoading) return <PageSkeleton />;
 
   return (
-    <div className="space-y-8 font-sans max-w-3xl mx-auto pb-20">
-      {/* Header & Actions */}
+    <div className="space-y-8 font-sans max-w-4xl mx-auto pb-20">
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">My Digital ID</h1>
@@ -363,118 +354,87 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Main Form */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
-        
-        {/* Username Setup */}
-        <div className="pb-6 border-b border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <label className="block text-sm font-medium text-slate-900">Public Profile Visibility</label>
-            <button
-              onClick={() => setIsPublic(!isPublic)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                isPublic ? 'bg-slate-900' : 'bg-slate-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isPublic ? 'translate-x-6' : 'translate-x-1'
+      <div className="space-y-6">
+        {/* Section 1: Mode Selector */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Mode</h2>
+          <ModeSelector 
+            currentMode={profileMode}
+            onModeSelect={handleModeChange}
+          />
+        </div>
+
+        {/* Section 2: Theme Selector */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Theme & Appearance</h2>
+          <ThemeSelector
+            currentMode={profileMode}
+            currentTheme={themePreset}
+            onThemeSelect={setThemePreset}
+            profilePreview={{
+              name: dynamicValues.full_name || 'Your Name',
+              status: dynamicValues.job_title || 'Your Tagline',
+              links: links.length > 0 ? links.slice(0, 2) : [
+                { title: 'My Portfolio', url: '#' },
+                { title: 'Instagram', url: '#' }
+              ]
+            }}
+          />
+        </div>
+
+        {/* Section 3: Dynamic Fields */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
+          
+          <div className="pb-6 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-slate-900">Public Profile Visibility</label>
+              <button
+                onClick={() => setIsPublic(!isPublic)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  isPublic ? 'bg-slate-900' : 'bg-slate-200'
                 }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            <label className="block text-sm font-medium text-slate-900 mb-2">URL/Username</label>
+            <div className="flex items-stretch">
+              <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm whitespace-nowrap">
+                rifelo.id/u/
+              </span>
+              <input 
+                type="text" 
+                placeholder="Username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''))}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium" 
               />
-            </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Only lowercase letters, numbers, dot (.), and underscore (_).</p>
           </div>
-          <p className="text-xs text-slate-500 mb-6">
-            {isPublic 
-              ? 'Your profile is currently visible to anyone with your link.' 
-              : 'Your profile is currently private and hidden from the public.'}
-          </p>
 
-          <label className="block text-sm font-medium text-slate-900 mb-2">URL/Username</label>
-          <div className="flex items-stretch">
-            <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm whitespace-nowrap">
-              rifelo.id/u/
-            </span>
-            <input 
-              type="text" 
-              placeholder="Username" 
-              value={username}
-              onChange={handleUsernameChange}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium" 
-            />
-          </div>
-          <p className="text-xs text-slate-500 mt-2">Only lowercase letters, numbers, dot (.), and underscore (_).</p>
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Information</h2>
+          <DynamicProfileForm
+            mode={profileMode}
+            initialValues={dynamicValues}
+            onChange={handleFieldChange}
+          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Full name" 
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Headline</label>
-            <input 
-              type="text" 
-              placeholder="Role, major, or title"
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Organization</label>
-            <input 
-              type="text" 
-              placeholder="Company, school, or club" 
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
-            <input 
-              type="email" 
-              placeholder="Email address" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
-          <textarea 
-            rows={3} 
-            placeholder="A short bio about yourself..."
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all resize-none"
-          ></textarea>
-        </div>
-
-        {/* Custom Links Section */}
-        <div className="pt-6 border-t border-slate-100">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        {/* Section 4: Links & Platforms */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Platforms & Links</h3>
-              <p className="text-xs text-slate-500 mt-1">Add your social media, portfolio, or contact links.</p>
+              <h3 className="text-lg font-bold text-slate-900">Platforms & Links</h3>
+              <p className="text-sm text-slate-500 mt-1">Add your social media, portfolio, or contact links.</p>
             </div>
             <button 
               type="button"
               onClick={handleAddLink}
-              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 sm:px-3 sm:py-1.5 bg-slate-900 text-white text-sm sm:text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+              className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
             >
-              <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5 mr-1.5 sm:mr-1" />
+              <Plus className="w-4 h-4 mr-2" />
               Add Link
             </button>
           </div>
@@ -487,7 +447,6 @@ export default function ProfilePage() {
               
               return (
                 <div key={link.id} className="flex flex-col bg-slate-50 rounded-xl border border-slate-200 group relative overflow-hidden transition-all">
-                  {/* Header (Always visible) */}
                   <div 
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100 transition-colors"
                     onClick={() => toggleLinkExpansion(link.id)}
@@ -515,64 +474,50 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-4">
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleVisibility(link.id);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); handleToggleVisibility(link.id); }}
                         className={`p-2 rounded-lg transition-colors ${
                           link.is_visible === false 
                             ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-200' 
                             : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
                         }`}
-                        title={link.is_visible === false ? "Show on profile" : "Hide from profile"}
                       >
                         {link.is_visible === false ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveLink(link.id);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); handleRemoveLink(link.id); }}
                         className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove Link"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                      <button 
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                        title={isExpanded ? "Collapse" : "Expand"}
-                      >
+                      <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Expanded Content */}
                   {isExpanded && (
                     <div className="p-4 pt-0 border-t border-slate-100 mt-2">
-                      <div className="flex flex-col sm:flex-row gap-4 items-start w-full">
-                        <div className="flex-1 w-full space-y-4 pt-2">
-                          <div>
-                            <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
-                            <input 
-                              type="text" 
-                              placeholder="Instagram, Portfolio, WhatsApp..." 
-                              value={link.title}
-                              onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
-                              className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-slate-700 mb-1.5">Text / Value</label>
-                            <input 
-                              type="text" 
-                              placeholder="URL or Username" 
-                              value={link.url}
-                              onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
-                              onBlur={() => handleLinkBlur(link.id)}
-                              className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
-                            />
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
+                          <input 
+                            type="text" 
+                            placeholder="Instagram, Portfolio..." 
+                            value={link.title}
+                            onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1.5">URL</label>
+                          <input 
+                            type="text" 
+                            placeholder="https://..." 
+                            value={link.url}
+                            onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
+                            onBlur={() => handleLinkBlur(link.id)}
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                          />
                         </div>
                       </div>
                     </div>
@@ -589,12 +534,12 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Message Box Settings Section */}
-        <div className="pt-6 border-t border-slate-100">
-          <div className="mb-4 flex flex-col sm:flex-row justify-between sm:items-center">
+        {/* Section 5: Message Box Settings */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="mb-6 flex flex-col sm:flex-row justify-between sm:items-center">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Message Box Settings</h3>
-              <p className="text-xs text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
+              <h3 className="text-lg font-bold text-slate-900">Message Box Settings</h3>
+              <p className="text-sm text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center shrink-0">
               <span className="mr-3 text-sm font-medium text-slate-900">Enable Message Box</span>
@@ -605,11 +550,7 @@ export default function ProfilePage() {
                   allowMessages ? 'bg-emerald-500' : 'bg-slate-200'
                 }`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    allowMessages ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowMessages ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
           </div>
@@ -619,37 +560,33 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-slate-700 mb-2">Name Input Placeholder</label>
               <input 
                 type="text" 
-                placeholder="Your Name (Optional)" 
                 value={messagePlaceholderName}
                 onChange={(e) => setMessagePlaceholderName(e.target.value)}
-                disabled={!allowMessages}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all disabled:bg-slate-100" 
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Message Input Placeholder</label>
               <input 
                 type="text" 
-                placeholder="Write a secret message..." 
                 value={messagePlaceholderContent}
                 onChange={(e) => setMessagePlaceholderContent(e.target.value)}
-                disabled={!allowMessages}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all disabled:bg-slate-100" 
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
               />
             </div>
           </div>
         </div>
 
-        {/* Save Footer */}
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-4">
+        {/* Section 6: Action Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pb-12">
           {errorMsg && (
-            <span className="flex items-center text-sm text-red-600 font-medium animate-in fade-in slide-in-from-right-4">
+            <span className="flex items-center text-sm text-red-600 font-medium">
               <AlertCircle className="w-4 h-4 mr-1.5" />
               {errorMsg}
             </span>
           )}
           {showSuccess && (
-            <span className="flex items-center text-sm text-emerald-600 font-medium animate-in fade-in slide-in-from-right-4">
+            <span className="flex items-center text-sm text-emerald-600 font-medium">
               <CheckCircle2 className="w-4 h-4 mr-1.5" />
               Saved successfully!
             </span>
@@ -657,19 +594,14 @@ export default function ProfilePage() {
           <button 
             onClick={handleSave} 
             disabled={isSaving}
-            className="w-full sm:w-auto flex justify-center items-center px-6 py-3 sm:py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex justify-center items-center px-8 py-3 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSaving ? (
-              <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
 
-      {/* Toast Notification */}
       {toast && (
         <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-bottom-4 ${
           toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
@@ -677,6 +609,20 @@ export default function ProfilePage() {
           {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}
           <span className="text-sm font-medium">{toast.message}</span>
         </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {pendingMode && (
+        <ModeSwitchConfirmation
+          isOpen={showModeSwitchConfirm}
+          fromMode={profileMode}
+          toMode={pendingMode}
+          onConfirm={confirmModeSwitch}
+          onCancel={() => {
+            setShowModeSwitchConfirm(false);
+            setPendingMode(null);
+          }}
+        />
       )}
     </div>
   );

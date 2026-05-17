@@ -8,11 +8,19 @@ interface MessageFormProps {
   profileId: string;
   placeholderName: string;
   placeholderContent: string;
+  themeColors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+  };
+  themePreset?: string;
 }
 
 const COOLDOWN_SECONDS = 60;
 
-export default function MessageForm({ profileId, placeholderName, placeholderContent }: MessageFormProps) {
+export default function MessageForm({ profileId, placeholderName, placeholderContent, themeColors, themePreset = 'vibrant' }: MessageFormProps) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState(''); // State untuk Honeypot
@@ -99,11 +107,22 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     }
   };
 
+  const inputStyles = {
+    background: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : (themeColors?.background || '#ffffff'),
+    color: themeColors?.text || '#111827',
+    borderColor: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : `${themeColors?.text}20`,
+  };
+
+  const buttonStyle = {
+    background: themeColors?.primary || '#111827',
+    color: themePreset === 'playful' ? '#ffffff' : (themePreset === 'minimal' || themePreset === 'gradient' ? '#ffffff' : '#ffffff'),
+  };
+
   return (
-    <div className="mt-12 pt-8 border-t border-slate-100">
+    <div className="mt-8 pt-8">
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-slate-900">Leave a Message</h2>
-        <p className="text-sm text-slate-500 mt-1">Send a secret message or say hello.</p>
+        <h2 className="text-lg font-bold" style={{ color: themeColors?.text }}>Leave a Message</h2>
+        <p className="text-sm opacity-60 mt-1" style={{ color: themeColors?.text }}>Send a secret message or say hello.</p>
       </div>
 
       <div className="relative grid">
@@ -137,7 +156,8 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={placeholderName}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all text-sm"
+              style={inputStyles}
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm"
               maxLength={50}
             />
           </div>
@@ -149,7 +169,8 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               placeholder={placeholderContent}
               required
               rows={4}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all text-sm resize-none"
+              style={inputStyles}
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm resize-none"
               maxLength={1000}
             />
           </div>
@@ -157,7 +178,8 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
           <button
             type="submit"
             disabled={isSubmitting || !message.trim() || cooldownLeft > 0}
-            className="w-full flex items-center justify-center px-6 py-3 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            style={buttonStyle}
+            className="w-full flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,15 +195,25 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
         </form>
 
         {isSuccess && (
-          <div className="col-start-1 row-start-1 h-full w-full bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300 z-10">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+          <div 
+            className="col-start-1 row-start-1 h-full w-full rounded-2xl p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300 z-10"
+            style={{
+              background: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : `${themeColors?.primary}10`,
+              border: `1px solid ${themeColors?.primary}20`
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+              style={{ background: `${themeColors?.primary}20` }}
+            >
+              <CheckCircle2 className="w-6 h-6" style={{ color: themeColors?.primary }} />
             </div>
-            <h3 className="text-emerald-900 font-semibold">Message Sent!</h3>
-            <p className="text-emerald-700 text-sm mt-1">Your message has been securely delivered.</p>
+            <h3 className="font-semibold" style={{ color: themeColors?.text }}>Message Sent!</h3>
+            <p className="text-sm mt-1 opacity-70" style={{ color: themeColors?.text }}>Your message has been securely delivered.</p>
             <button 
               onClick={() => setIsSuccess(false)}
-              className="mt-6 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+              className="mt-6 text-sm font-medium hover:opacity-80 transition-opacity"
+              style={{ color: themeColors?.primary }}
             >
               Send another message
             </button>
