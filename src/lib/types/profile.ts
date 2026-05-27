@@ -153,3 +153,91 @@ export interface CreativeProfile extends BaseProfile {
  * Use this type when a profile can be in any mode.
  */
 export type Profile = CasualProfile | ProfessionalProfile | CreativeProfile;
+
+/**
+ * Represents the tabs available in the profile editor.
+ */
+export type ProfileTab = 'profile' | 'appearance' | 'links';
+
+/**
+ * Supported font families for profile appearance.
+ */
+export type FontFamily = 'Inter' | 'Space Grotesk' | 'JetBrains Mono';
+
+/**
+ * Supported border radius styles for profile appearance.
+ * subtle = 8px, rounded = 12px, pill = 24px
+ */
+export type BorderRadius = 'subtle' | 'rounded' | 'pill';
+
+/**
+ * Defines custom colors for the profile in HEX format (#xxxxxx).
+ */
+export interface CustomColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+/**
+ * Represents the consolidated appearance settings for a profile.
+ * This replaces separate mode, theme preset, and custom theme configs.
+ */
+export interface CustomAppearance {
+  mode: ProfileMode;
+  preset: ThemePreset | null;
+  colors: CustomColors;
+  font_family: FontFamily;
+  border_radius: BorderRadius;
+}
+
+/**
+ * Default appearance settings for new users.
+ */
+export const DEFAULT_APPEARANCE: CustomAppearance = {
+  mode: 'casual',
+  preset: 'minimal',
+  colors: {
+    primary: '#0f172a',
+    secondary: '#f8fafc',
+    accent: '#64748b',
+  },
+  font_family: 'Inter',
+  border_radius: 'rounded',
+};
+
+/**
+ * Available font options with preview text.
+ */
+export const FONT_OPTIONS = [
+  { value: 'Inter', label: 'Inter', preview: 'The quick brown fox' },
+  { value: 'Space Grotesk', label: 'Space Grotesk', preview: 'The quick brown fox' },
+  { value: 'JetBrains Mono', label: 'JetBrains Mono', preview: 'The quick brown fox' },
+] as const;
+
+/**
+ * Available border radius options.
+ */
+export const BORDER_RADIUS_OPTIONS = [
+  { value: 'subtle', label: 'Subtle', px: 8, description: 'Clean & modern' },
+  { value: 'rounded', label: 'Rounded', px: 12, description: 'Friendly & standard' },
+  { value: 'pill', label: 'Pill', px: 24, description: 'Trendy & playful' },
+] as const;
+
+/**
+ * Curated popular HEX colors for profile primary colors.
+ */
+export const POPULAR_COLORS: string[] = [
+  '#a855f7', // purple
+  '#ec4899', // pink
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f97316', // orange
+  '#ef4444', // red
+  '#14b8a6', // teal
+  '#6366f1', // indigo
+  '#f43f5e', // rose
+  '#f59e0b', // amber
+  '#06b6d4', // cyan
+  '#64748b', // slate
+];

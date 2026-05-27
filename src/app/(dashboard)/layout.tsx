@@ -55,6 +55,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { id: 'personal', type: 'personal', name: 'Personal Account', subtitle: 'My Account' }
   ]);
   const [isWorkspacesLoaded, setIsWorkspacesLoaded] = useState(false);
+  const [hasUnreadInbox, setHasUnreadInbox] = useState(false);
+
+  const checkInbox = async (explicitUserId?: string) => {
+    const targetUserId = explicitUserId || user?.id;
+    if (!targetUserId) return;
+
+    if (pathname === '/inbox') {
+      setHasUnreadInbox(false);
+      return;
+    }
+
+    const lastViewed = localStorage.getItem('lastViewedInboxTime');
+    let query = supabase.from('profile_messages').select('*', { count: 'exact', head: true }).eq('profile_id', targetUserId);
+    if (lastViewed) {
+      query = query.gt('created_at', lastViewed);
+    }
+    const { count } = await query;
+    if (count !== null && count > 0) {
+      setHasUnreadInbox(true);
+    } else {
+      setHasUnreadInbox(false);
+    }
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -156,20 +179,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           fetchJoinedCircles();
 
-          const checkInbox = async () => {
-            const lastViewed = localStorage.getItem('lastViewedInboxTime');
-            let query = supabase.from('profile_messages').select('*', { count: 'exact', head: true }).eq('profile_id', session.user.id);
-            if (lastViewed) {
-              query = query.gt('created_at', lastViewed);
-            }
-            const { count } = await query;
-            if (count && count > 0) {
-              setHasUnreadInbox(true);
-            } else {
-              setHasUnreadInbox(false);
-            }
-          };
-          checkInbox();
+          checkInbox(session.user.id);
 
           // Subscribe to membership changes
           const channel = supabase
@@ -225,7 +235,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasUnreadInbox, setHasUnreadInbox] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      checkInbox();
+    }
+    
+    const handleInboxUpdated = () => {
+      checkInbox();
+    };
+
+    window.addEventListener('inbox-updated', handleInboxUpdated);
+    return () => {
+      window.removeEventListener('inbox-updated', handleInboxUpdated);
+    };
+  }, [user?.id, pathname]);
 
   useEffect(() => {
     const saved = localStorage.getItem('activeWorkspaceId');

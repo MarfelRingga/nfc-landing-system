@@ -14,13 +14,15 @@ interface MessageFormProps {
     accent: string;
     background: string;
     text: string;
+    inputBg?: string;
+    inputBorder?: string;
   };
   themePreset?: string;
 }
 
 const COOLDOWN_SECONDS = 60;
 
-export default function MessageForm({ profileId, placeholderName, placeholderContent, themeColors, themePreset = 'vibrant' }: MessageFormProps) {
+export default function MessageForm({ profileId, placeholderName, placeholderContent, themeColors, themePreset = 'minimal' }: MessageFormProps) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState(''); // State untuk Honeypot
@@ -108,14 +110,14 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
   };
 
   const inputStyles = {
-    background: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : (themeColors?.background || '#ffffff'),
+    background: themeColors?.inputBg || themeColors?.background || '#ffffff',
     color: themeColors?.text || '#111827',
-    borderColor: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : `${themeColors?.text}20`,
+    borderColor: themeColors?.inputBorder || `${themeColors?.text}20`,
   };
 
   const buttonStyle = {
     background: themeColors?.primary || '#111827',
-    color: themePreset === 'playful' ? '#ffffff' : (themePreset === 'minimal' || themePreset === 'gradient' ? '#ffffff' : '#ffffff'),
+    color: '#ffffff',
   };
 
   return (
@@ -198,8 +200,8 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
           <div 
             className="col-start-1 row-start-1 h-full w-full rounded-2xl p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300 z-10"
             style={{
-              background: themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : `${themeColors?.primary}10`,
-              border: `1px solid ${themeColors?.primary}20`
+              background: themeColors?.inputBg || `${themeColors?.primary}10`,
+              border: `1px solid ${themeColors?.inputBorder || `${themeColors?.primary}20`}`
             }}
           >
             <div 

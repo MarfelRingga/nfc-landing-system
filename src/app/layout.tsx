@@ -16,15 +16,14 @@ const bodyFont = Inter({
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#0c0e0b",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://rifelo.id'),
-  title: "Rifelo - Your Identity, Instantly Shared",
+  title: "Rifelo - Tap Once. Share Everything. No App Required.",
   description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",
-  keywords: ["Digital Identity", "NFC", "Contact Sharing", "Networking", "Rifelo", "Social Profile"],
+  keywords: ["NFC wristband", "digital business card", "networking", "Digital Identity", "NFC", "Contact Sharing", "Rifelo", "Social Profile"],
   authors: [{ name: "Rifelo Team" }],
   robots: "index, follow",
   alternates: {
@@ -60,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
+    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable} scroll-smooth`}>
       <head>
         {/* Google tag (gtag.js) */}
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-6835JNPG69" strategy="afterInteractive" />

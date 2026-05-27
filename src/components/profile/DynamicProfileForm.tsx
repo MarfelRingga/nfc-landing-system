@@ -47,6 +47,10 @@ export function DynamicProfileForm({
   // Local state for tracking touched fields for validation
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Custom interactive bio resizer state
+  const [textareaHeight, setTextareaHeight] = useState(140);
+  const [isResizing, setIsResizing] = useState(false);
+
   // Sync initialValues if they change deeply (optional, but good for resetting)
   useEffect(() => {
     setValues(initialValues);
@@ -116,26 +120,85 @@ export function DynamicProfileForm({
                 )}
                 
                 {isTextarea ? (
-                  <textarea
-                    id={`field-${key}`}
-                    name={key}
-                    value={value}
-                    onChange={(e) => handleChange(key, e.target.value)}
-                    onBlur={() => handleBlur(key)}
-                    placeholder={config.placeholder}
-                    maxLength={config.maxLength}
-                    required={config.required}
-                    disabled={isLoading}
+                  <div 
                     className={cn(
-                      "w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 resize-y min-h-[120px]",
-                      IconComponent && "pl-10",
+                      "w-full rounded-xl border bg-white overflow-hidden transition-all flex flex-col focus-within:ring-2 focus-within:outline-none",
                       isError 
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" 
-                        : "border-slate-200 focus:border-slate-800 focus:ring-slate-800/10 hover:border-slate-300"
+                        ? "border-red-300 focus-within:ring-red-500/20 focus-within:border-red-500" 
+                        : "border-slate-200 focus-within:ring-slate-800/10 focus-within:border-slate-800 hover:border-slate-300"
                     )}
-                    aria-invalid={isError ? "true" : "false"}
-                    aria-describedby={isError ? `error-${key}` : undefined}
-                  />
+                  >
+                    <textarea
+                      id={`field-${key}`}
+                      name={key}
+                      value={value}
+                      onChange={(e) => handleChange(key, e.target.value)}
+                      onBlur={() => handleBlur(key)}
+                      placeholder={config.placeholder}
+                      maxLength={config.maxLength}
+                      required={config.required}
+                      disabled={isLoading}
+                      style={{ height: `${textareaHeight}px` }}
+                      className={cn(
+                        "w-full bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 resize-none min-h-[100px]",
+                        IconComponent && "pl-10"
+                      )}
+                      aria-invalid={isError ? "true" : "false"}
+                      aria-describedby={isError ? `error-${key}` : undefined}
+                    />
+                    
+                    {/* Visual Pull-Tab Affordance: Beautiful, simple, triggers user function & is fully interactive */}
+                    <div 
+                      className={cn(
+                        "w-full flex flex-col items-center justify-center py-2 bg-slate-50 border-t border-slate-100 hover:bg-slate-100/70 cursor-row-resize select-none group touch-none active:bg-slate-200/50 transition-colors",
+                        isResizing && "bg-slate-100"
+                      )}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsResizing(true);
+                        const startY = e.clientY;
+                        const startHeight = textareaHeight;
+                        
+                        const handleMouseMove = (moveEvent: MouseEvent) => {
+                          const deltaY = moveEvent.clientY - startY;
+                          setTextareaHeight(Math.max(100, Math.min(450, startHeight + deltaY)));
+                        };
+                        
+                        const handleMouseUp = () => {
+                          setIsResizing(false);
+                          window.removeEventListener('mousemove', handleMouseMove);
+                          window.removeEventListener('mouseup', handleMouseUp);
+                        };
+                        
+                        window.addEventListener('mousemove', handleMouseMove);
+                        window.addEventListener('mouseup', handleMouseUp);
+                      }}
+                      onTouchStart={(e) => {
+                        setIsResizing(true);
+                        const startY = e.touches[0].clientY;
+                        const startHeight = textareaHeight;
+                        
+                        const handleTouchMove = (moveEvent: TouchEvent) => {
+                          const deltaY = moveEvent.touches[0].clientY - startY;
+                          setTextareaHeight(Math.max(100, Math.min(450, startHeight + deltaY)));
+                        };
+                        
+                        const handleTouchEnd = () => {
+                          setIsResizing(false);
+                          window.removeEventListener('touchmove', handleTouchMove);
+                          window.removeEventListener('touchend', handleTouchEnd);
+                        };
+                        
+                        window.addEventListener('touchmove', handleTouchMove, { passive: true });
+                        window.addEventListener('touchend', handleTouchEnd);
+                      }}
+                    >
+                      <div className={cn(
+                        "w-12 h-1 bg-slate-300 rounded-full group-hover:bg-slate-400 group-hover:w-16 transition-all duration-300",
+                        isResizing && "bg-slate-500 w-16"
+                      )} />
+                    </div>
+                  </div>
                 ) : (
                   <input
                     id={`field-${key}`}

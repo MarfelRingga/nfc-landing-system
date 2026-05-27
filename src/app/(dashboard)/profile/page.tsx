@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ExternalLink, Plus, Trash2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Save, ExternalLink, Plus, Trash2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Link as LinkIcon, Loader2, Palette } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getPlatformInfo } from '@/lib/platforms';
 import { revalidateProfile } from '@/app/actions/revalidate';
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { encodeMessageSettings, decodeMessageSettings } from '@/lib/messageSettings';
 
 import { ModeSelector } from '@/components/profile/ModeSelector';
@@ -17,7 +17,7 @@ import { ModeSwitchConfirmation } from '@/components/profile/ModeSwitchConfirmat
 import { ProfileMode } from '@/lib/types/profile';
 import { migrateFieldData } from '@/lib/profileMigration';
 import { getValidationErrors } from '@/lib/validation/profileValidation';
-import { getThemesByMode } from '@/lib/themePresets';
+import { getThemesByMode, getTheme } from '@/lib/themePresets';
 
 interface CustomLink {
   id: string;
@@ -47,9 +47,12 @@ export default function ProfilePage() {
 
   // --- NEW STATES (Multi-Mode) ---
   const [profileMode, setProfileMode] = useState<ProfileMode>('casual');
-  const [themePreset, setThemePreset] = useState<string>('vibrant');
+  const [themePreset, setThemePreset] = useState<string>('minimal');
   const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
   const [pendingMode, setPendingMode] = useState<ProfileMode | null>(null);
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [activeAppearanceTab, setActiveAppearanceTab] = useState<'mode' | 'theme'>('mode');
+  const [customTheme, setCustomTheme] = useState<any>({});
 
   const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({
     full_name: '',
@@ -59,6 +62,27 @@ export default function ProfilePage() {
     phone: '',
     bio: ''
   });
+
+  const [originalStateHash, setOriginalStateHash] = useState<string>('');
+
+  const getCurrentStateHash = (
+    u = username, 
+    ip = isPublic, 
+    pm = profileMode, 
+    tp = themePreset, 
+    ct = customTheme,
+    dv = dynamicValues, 
+    ls = links, 
+    mpn = messagePlaceholderName, 
+    mpc = messagePlaceholderContent, 
+    am = allowMessages
+  ) => {
+    // Strip temporary IDs from links for stable comparison if needed, or just compare as-is.
+    const cleanLinks = ls.map(l => ({ title: l.title, url: l.url, is_visible: l.is_visible }));
+    return JSON.stringify({ u, ip, pm, tp, dv, cleanLinks, mpn, mpc, am, ct });
+  };
+
+  const hasUnsavedChanges = !isLoading && originalStateHash !== '' && originalStateHash !== getCurrentStateHash();
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -82,20 +106,33 @@ export default function ProfilePage() {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+      // Fetch Profile and Links concurrently (Promise.all)
+      const [profileResult, linksResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('profile_links')
+          .select('*')
+          .eq('profile_id', user.id)
+          .order('sort_order', { ascending: true })
+      ]);
+
+      const { data: profile, error: profileError } = profileResult;
+      const { data: linksData, error: linksError } = linksResult;
 
       if (profileError) throw new Error(`Failed to load profile: ${profileError.message}`);
+      if (linksError) throw new Error(`Failed to load profile links: ${linksError.message}`);
 
       if (profile) {
         setUsername(profile.username || '');
         setIsPublic(profile.is_public !== false);
         
         setProfileMode((profile.profile_mode as ProfileMode) || 'casual');
-        setThemePreset(profile.theme_preset || 'vibrant');
+        setThemePreset(profile.theme_preset || 'minimal');
+        setCustomTheme(profile.custom_theme || {});
 
         setDynamicValues({
           full_name: profile.full_name || '',
@@ -112,16 +149,32 @@ export default function ProfilePage() {
         setMessagePlaceholderContent(profile.message_placeholder_content || 'Write a secret message...');
       }
 
-      // 2. Fetch Links
-      const { data: linksData } = await supabase
-        .from('profile_links')
-        .select('*')
-        .eq('profile_id', user.id)
-        .order('sort_order', { ascending: true });
-
       if (linksData) {
         setLinks(linksData.map(l => ({ id: l.id, title: l.title, url: l.url, is_visible: l.is_visible })));
       }
+
+      // Delay state hash capture slightly to let all states settle
+      setTimeout(() => {
+        setOriginalStateHash(getCurrentStateHash(
+          profile?.username || '',
+          profile?.is_public !== false,
+          (profile?.profile_mode as ProfileMode) || 'casual',
+          profile?.theme_preset || 'minimal',
+          profile?.custom_theme || {},
+          {
+            full_name: profile?.full_name || '',
+            job_title: profile?.job_title || '',
+            company: profile?.company || '',
+            email: profile?.email || '',
+            phone: profile?.phone || '',
+            bio: profile?.bio || '',
+          },
+          linksData ? linksData.map(l => ({ id: l.id, title: l.title, url: l.url, is_visible: l.is_visible })) : [],
+          decodeMessageSettings(profile?.message_placeholder_name || 'Your Name (Optional)').cleanName,
+          profile?.message_placeholder_content || 'Write a secret message...',
+          decodeMessageSettings(profile?.message_placeholder_name || 'Your Name (Optional)').isEnabled
+        ));
+      }, 0);
 
     } catch (error: any) {
       console.error('Initialization error:', error);
@@ -131,7 +184,24 @@ export default function ProfilePage() {
     }
   };
 
-  // --- MODE SWITCH LOGIC ---
+  // --- KEYBOARD SHORTCUTS ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasUnsavedChanges || !originalStateHash) {
+          handleSave();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, originalStateHash, username, isPublic, profileMode, themePreset, customTheme, dynamicValues, links, messagePlaceholderName, messagePlaceholderContent, allowMessages]);
+
+  const updateCustomTheme = (updates: any) => {
+    setCustomTheme((prev: any) => ({ ...prev, ...updates }));
+  };
+
   const handleModeChange = (newMode: ProfileMode) => {
     if (newMode === profileMode) return;
     setPendingMode(newMode);
@@ -148,12 +218,19 @@ export default function ProfilePage() {
     // Auto-switch theme jika tidak kompatibel
     const compatibleThemes = getThemesByMode(pendingMode);
     const isCurrentThemeOK = compatibleThemes.find(t => t.id === themePreset);
+    
+    let nextTheme = themePreset;
     if (!isCurrentThemeOK && compatibleThemes.length > 0) {
-      setThemePreset(compatibleThemes[0].id);
+      nextTheme = compatibleThemes[0].id;
+      setThemePreset(nextTheme);
     }
     
     setShowModeSwitchConfirm(false);
     setPendingMode(null);
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setThemePreset(newTheme);
   };
 
   // --- HANDLERS ---
@@ -179,7 +256,6 @@ export default function ProfilePage() {
     const link = links.find(l => l.id === id);
     const newVisibility = link?.is_visible === false ? true : false;
     setLinks(links.map(l => l.id === id ? { ...l, is_visible: newVisibility } : l));
-    showToast(newVisibility ? 'Link is now visible' : 'Link is now hidden');
   };
 
   const handleLinkChange = (id: string, field: 'title' | 'url', value: string) => {
@@ -260,13 +336,16 @@ export default function ProfilePage() {
   };
 
   // --- SAVE LOGIC ---
-  const handleSave = async () => {
+  const handleSave = async (options: { overrides?: { mode?: ProfileMode; theme?: string } } = {}) => {
     try {
       setIsSaving(true);
       setErrorMsg(null);
       setShowSuccess(false);
 
-      const validationErrors = getValidationErrors(dynamicValues, profileMode as ProfileMode);
+      const currentMode = options.overrides?.mode || profileMode;
+      const currentTheme = options.overrides?.theme || themePreset;
+
+      const validationErrors = getValidationErrors(dynamicValues, currentMode as ProfileMode);
       if (validationErrors.length > 0) {
         setErrorMsg(validationErrors[0].message);
         setIsSaving(false);
@@ -294,8 +373,9 @@ export default function ProfilePage() {
         email: dynamicValues.email || '',
         phone: dynamicValues.phone || null,
         bio: dynamicValues.bio || '',
-        profile_mode: profileMode,
-        theme_preset: themePreset,
+        profile_mode: currentMode,
+        theme_preset: currentTheme,
+        custom_theme: customTheme,
         is_public: isPublic,
         message_placeholder_name: encodedMessageName,
         message_placeholder_content: messagePlaceholderContent
@@ -332,6 +412,19 @@ export default function ProfilePage() {
         await supabase.from('profile_links').delete().eq('profile_id', user.id);
       }
 
+      setOriginalStateHash(getCurrentStateHash(
+        username,
+        isPublic,
+        currentMode,
+        currentTheme,
+        customTheme,
+        dynamicValues,
+        validLinks,
+        messagePlaceholderName,
+        messagePlaceholderContent,
+        allowMessages
+      ));
+
       setShowSuccess(true);
       if (username) await revalidateProfile(username);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -345,7 +438,7 @@ export default function ProfilePage() {
   };
 
   // --- RENDER ---
-  if (isLoading) return <PageSkeleton />;
+  if (isLoading) return <ProfileSkeleton />;
 
   return (
     <div className="space-y-8 font-sans max-w-4xl mx-auto pb-20">
@@ -369,33 +462,6 @@ export default function ProfilePage() {
       </div>
 
       <div className="space-y-6">
-        {/* Section 1: Mode Selector */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Mode</h2>
-          <ModeSelector 
-            currentMode={profileMode}
-            onModeSelect={handleModeChange}
-          />
-        </div>
-
-        {/* Section 2: Theme Selector */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Theme & Appearance</h2>
-          <ThemeSelector
-            currentMode={profileMode}
-            currentTheme={themePreset}
-            onThemeSelect={setThemePreset}
-            profilePreview={{
-              name: dynamicValues.full_name || 'Your Name',
-              status: dynamicValues.job_title || 'Your Tagline',
-              links: links.length > 0 ? links.slice(0, 2) : [
-                { title: 'My Portfolio', url: '#' },
-                { title: 'Instagram', url: '#' }
-              ]
-            }}
-          />
-        </div>
-
         {/* Section 3: Dynamic Fields */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
           
@@ -404,17 +470,21 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-slate-900">Public Profile Visibility</label>
               <button
                 onClick={() => setIsPublic(!isPublic)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                  isPublic ? 'bg-slate-900' : 'bg-slate-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
+                  isPublic 
+                    ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
+                    : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
                 }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
+                  isPublic ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
+                }`} />
               </button>
             </div>
 
             <label className="block text-sm font-medium text-slate-900 mb-2">URL/Username</label>
             <div className="flex items-stretch">
-              <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm whitespace-nowrap">
+              <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 font-medium whitespace-nowrap">
                 rifelo.id/u/
               </span>
               <input 
@@ -560,11 +630,15 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setAllowMessages(!allowMessages)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                  allowMessages ? 'bg-emerald-500' : 'bg-slate-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
+                  allowMessages 
+                    ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
+                    : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
                 }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowMessages ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
+                  allowMessages ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
+                }`} />
               </button>
             </div>
           </div>
@@ -591,33 +665,162 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Section 6: Action Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pb-12">
-          {errorMsg && (
-            <span className="flex items-center text-sm text-red-600 font-medium">
-              <AlertCircle className="w-4 h-4 mr-1.5" />
-              {errorMsg}
-            </span>
-          )}
-          {showSuccess && (
-            <span className="flex items-center text-sm text-emerald-600 font-medium">
-              <CheckCircle2 className="w-4 h-4 mr-1.5" />
-              Saved successfully!
-            </span>
-          )}
-          <button 
-            onClick={handleSave} 
-            disabled={isSaving}
-            className="w-full sm:w-auto flex justify-center items-center px-8 py-3 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+        {/* Section 6: Appearance Settings */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 overflow-hidden">
+          <div 
+            className="flex items-center justify-between cursor-pointer group hover:opacity-90 transition-opacity"
+            onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}
           >
-            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                Appearance Settings
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">Customize the display mode, theme preset, fonts, and look of your profile card.</p>
+            </div>
+            <button 
+              type="button"
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors shrink-0"
+            >
+              {isAppearanceOpen ? <ChevronUp className="w-5 h-5 animate-in fade-in" /> : <ChevronDown className="w-5 h-5 animate-in fade-in" />}
+            </button>
+          </div>
+
+          {isAppearanceOpen && (
+            <div className="mt-6 space-y-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+              {/* Mode */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0">Mode</div>
+                <div className="flex-1">
+                  <ModeSelector 
+                    currentMode={profileMode}
+                    onModeSelect={handleModeChange}
+                  />
+                </div>
+              </div>
+              
+              <div className="h-px bg-slate-100"></div>
+              
+              {/* Theme */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0">Theme Preset</div>
+                <div className="flex-1">
+                  <ThemeSelector
+                    currentMode={profileMode}
+                    currentTheme={themePreset}
+                    onThemeSelect={handleThemeChange}
+                  />
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-100"></div>
+
+              {/* Custom Theme Features */}
+              <div className="space-y-6">
+                {/* Link Style */}
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-6">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0 sm:mt-5">Link Style</div>
+                  <div className="flex flex-col gap-3 flex-1 w-full max-w-xl">
+                    {/* Sharp */}
+                    <button 
+                      type="button"
+                      onClick={() => updateCustomTheme({ borderRadius: 'sharp' })}
+                      className={`flex items-center justify-between px-5 py-3.5 border-[1.5px] rounded-2xl transition-all duration-200 text-left w-full
+                        ${(customTheme?.borderRadius) === 'sharp' 
+                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-extrabold' 
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                    >
+                      <span className="text-sm">Sharp</span>
+                      <div className="px-3 py-1 text-[11px] font-bold border-[1.5px] border-current rounded-none">
+                        Link
+                      </div>
+                    </button>
+
+                    {/* Rounded */}
+                    <button 
+                      type="button"
+                      onClick={() => updateCustomTheme({ borderRadius: 'rounded' })}
+                      className={`flex items-center justify-between px-5 py-3.5 border-[1.5px] rounded-2xl transition-all duration-200 text-left w-full
+                        ${(customTheme?.borderRadius || 'rounded') === 'rounded' 
+                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-extrabold' 
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                    >
+                      <span className="text-sm">Rounded</span>
+                      <div className="px-3 py-1 text-[11px] font-bold border-[1.5px] border-current rounded-lg">
+                        Link
+                      </div>
+                    </button>
+
+                    {/* Pill */}
+                    <button 
+                      type="button"
+                      onClick={() => updateCustomTheme({ borderRadius: 'pill' })}
+                      className={`flex items-center justify-between px-5 py-3.5 border-[1.5px] rounded-2xl transition-all duration-200 text-left w-full
+                        ${(customTheme?.borderRadius) === 'pill' 
+                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-extrabold' 
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                    >
+                      <span className="text-sm">Pill</span>
+                      <div className="px-3 py-1 text-[11px] font-bold border-[1.5px] border-current rounded-full">
+                        Link
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Floating Action Button (Unsaved Changes) */}
+        <div 
+          className={`fixed bottom-24 md:bottom-24 right-6 md:right-8 z-50 pointer-events-none transition-all duration-500 ease-out flex justify-end
+            ${(hasUnsavedChanges || isSaving || showSuccess || errorMsg) ? 'translate-y-0 opacity-100' : 'translate-y-[150%] opacity-0'}`}
+        >
+          <div className="pointer-events-auto flex items-center">
+            <div className={`backdrop-blur-xl border shadow-lg rounded-xl p-2 flex items-center gap-3 transition-colors duration-300
+              ${showSuccess ? 'bg-emerald-50/90 border-emerald-200' : 'bg-white/90 border-slate-200'}
+            `}>
+              <div className="flex items-center">
+                {errorMsg && (
+                  <span className="flex items-center text-[13px] text-red-600 font-medium px-2 animate-in fade-in slide-in-from-right-2">
+                    <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                    {errorMsg}
+                  </span>
+                )}
+                {showSuccess && !errorMsg && (
+                  <span className="flex items-center text-[13px] text-emerald-700 font-medium px-2 animate-in fade-in slide-in-from-right-2">
+                    <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
+                    Saved
+                  </span>
+                )}
+                {!showSuccess && !errorMsg && hasUnsavedChanges && (
+                  <span className="flex items-center text-[13px] text-amber-600 font-medium px-2 animate-in fade-in">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
+                    Unsaved changes
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center shrink-0">
+                <button 
+                  onClick={() => handleSave()} 
+                  disabled={isSaving || (!hasUnsavedChanges && !errorMsg)}
+                  className={`flex justify-center items-center px-4 py-1.5 text-[13px] font-medium rounded-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm
+                    ${showSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                >
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : showSuccess ? <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+                  {isSaving ? 'Saving' : showSuccess ? 'Done' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {toast && (
-        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-bottom-4 ${
+        <div className={`fixed bottom-24 md:bottom-8 right-6 md:right-8 z-[100] flex items-center px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-bottom-4 ${
           toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}

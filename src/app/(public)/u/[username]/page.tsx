@@ -67,7 +67,7 @@ async function getProfileData(username: string) {
       messagePlaceholderName: messageSettings.cleanName,
       messagePlaceholderContent: profile.message_placeholder_content || 'Write a secret message...',
       profileMode: (profile.profile_mode as ProfileMode) || 'casual',
-      themePreset: profile.theme_preset || 'vibrant',
+      themePreset: profile.theme_preset || 'minimal',
       customTheme: profile.custom_theme
     };
   } catch (err) {
@@ -132,7 +132,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
   }
 
   // Apply Theme
-  const theme = getTheme(profile.themePreset) || themePresets.vibrant;
+  const theme = getTheme(profile.themePreset) || themePresets.minimal;
   
   // Custom theme overrides if any
   const appliedColors = {
@@ -142,6 +142,14 @@ export default async function PublicProfilePage({ params, searchParams }: { para
 
   const isGradientBg = appliedColors.background.includes('gradient');
   const isGradientCardBg = appliedColors.cardBg.includes('gradient');
+
+  const getLinkRadius = (r: string | undefined): string => {
+    if (r === 'sharp') return '0px';
+    if (r === 'rounded') return '16px';
+    if (r === 'pill') return '9999px';
+    return '16px'; // default to rounded-2xl equivalent
+  };
+  const linkRadius = getLinkRadius(profile.customTheme?.borderRadius as string | undefined);
 
   // Normal Profile View
   return (
@@ -156,9 +164,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
       <div 
         className="w-full max-w-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm p-8 space-y-8 transition-all duration-500"
         style={{
-          background: isGradientCardBg ? appliedColors.cardBg : (profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : appliedColors.cardBg),
+          background: appliedColors.cardBg,
           borderRadius: theme.borderRadius,
-          border: profile.themePreset === 'gradient' ? '1px solid rgba(255, 255, 255, 0.2)' : `1px solid ${appliedColors.primary}20`
+          border: `1px solid ${appliedColors.cardBorder}`
         }}
       >
         
@@ -206,10 +214,10 @@ export default async function PublicProfilePage({ params, searchParams }: { para
             <div 
               className="flex items-center p-4 transition-colors"
               style={{ 
-                background: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : appliedColors.secondary,
-                borderRadius: theme.borderRadius,
-                borderColor: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                borderWidth: '1px'
+                background: appliedColors.linkBg || appliedColors.secondary,
+                borderColor: appliedColors.linkBorder || 'transparent',
+                borderWidth: '1px',
+                borderRadius: linkRadius
               }}
             >
               {profile.profileMode === 'casual' ? (
@@ -229,10 +237,10 @@ export default async function PublicProfilePage({ params, searchParams }: { para
               rel="noopener noreferrer"
               className="flex items-center p-4 transition-colors hover:opacity-80"
               style={{ 
-                background: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : appliedColors.secondary,
-                borderRadius: theme.borderRadius,
-                borderColor: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                borderWidth: '1px'
+                background: appliedColors.linkBg || appliedColors.secondary,
+                borderColor: appliedColors.linkBorder || 'transparent',
+                borderWidth: '1px',
+                borderRadius: linkRadius
               }}
             >
               <Globe className="w-5 h-5 mr-3 opacity-60" style={{ color: appliedColors.primary }} />
@@ -246,10 +254,10 @@ export default async function PublicProfilePage({ params, searchParams }: { para
               href={`mailto:${profile.email}`} 
               className="flex items-center p-4 transition-colors hover:opacity-80"
               style={{ 
-                background: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : appliedColors.secondary,
-                borderRadius: theme.borderRadius,
-                borderColor: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                borderWidth: '1px'
+                background: appliedColors.linkBg || appliedColors.secondary,
+                borderColor: appliedColors.linkBorder || 'transparent',
+                borderWidth: '1px',
+                borderRadius: linkRadius
               }}
             >
               <Mail className="w-5 h-5 mr-3 opacity-60" style={{ color: appliedColors.primary }} />
@@ -260,15 +268,15 @@ export default async function PublicProfilePage({ params, searchParams }: { para
           {/* Phone (Casual & Pro) */}
           {(profile.profileMode === 'casual' || profile.profileMode === 'professional') && profile.phone && (
             <a 
-              href={`https://wa.me/${profile.phone.replace(/\\D/g, '')}`} 
+              href={`https://wa.me/${profile.phone.replace(/\D/g, '')}`} 
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center p-4 transition-colors hover:opacity-80"
               style={{ 
-                background: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : appliedColors.secondary,
-                borderRadius: theme.borderRadius,
-                borderColor: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                borderWidth: '1px'
+                background: appliedColors.linkBg || appliedColors.secondary,
+                borderColor: appliedColors.linkBorder || 'transparent',
+                borderWidth: '1px',
+                borderRadius: linkRadius
               }}
             >
               {(profile.profileMode === 'casual') ? (
@@ -296,10 +304,10 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                 const isUrl = link.url.startsWith('http://') || link.url.startsWith('https://');
                 
                 const linkStyle = {
-                  background: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.05)' : appliedColors.secondary,
-                  borderRadius: theme.borderRadius,
-                  borderColor: profile.themePreset === 'gradient' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  borderWidth: '1px'
+                  background: appliedColors.linkBg || appliedColors.secondary,
+                  borderColor: appliedColors.linkBorder || 'transparent',
+                  borderWidth: '1px',
+                  borderRadius: linkRadius
                 };
                 
                 if (platformInfo) {
@@ -315,10 +323,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                     >
                       <div className="flex items-center">
                         <div 
-                          className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform"
+                          className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform rounded-xl"
                           style={{ 
-                            background: appliedColors.background, 
-                            borderRadius: `calc(${theme.borderRadius} - 4px)` 
+                            background: appliedColors.background
                           }}
                         >
                           <Icon className={`w-5 h-5 ${profile.themePreset === 'gradient' ? 'text-white' : platformInfo.color.replace('text-', '')}`} 
@@ -346,10 +353,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                     >
                       <div className="flex items-center">
                         <div 
-                          className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform"
+                          className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm group-hover:scale-110 transition-transform rounded-xl"
                           style={{ 
-                            background: appliedColors.background, 
-                            borderRadius: `calc(${theme.borderRadius} - 4px)` 
+                            background: appliedColors.background 
                           }}
                         >
                           <LinkIcon className="w-5 h-5 opacity-60 group-hover:opacity-100" style={{ color: appliedColors.primary }} />
@@ -369,10 +375,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                   >
                     <div className="flex items-center">
                       <div 
-                        className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm font-bold opacity-80"
+                        className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm font-bold opacity-80 rounded-xl"
                         style={{ 
                           background: appliedColors.background, 
-                          borderRadius: `calc(${theme.borderRadius} - 4px)`,
                           color: appliedColors.primary
                         }}
                       >
@@ -400,7 +405,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                 secondary: appliedColors.secondary,
                 accent: appliedColors.accent,
                 background: appliedColors.background,
-                text: appliedColors.text
+                text: appliedColors.text,
+                inputBg: appliedColors.inputBg,
+                inputBorder: appliedColors.inputBorder
               }}
               themePreset={profile.themePreset}
             />

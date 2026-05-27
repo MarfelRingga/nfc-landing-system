@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Camera, Users, Smartphone, HelpCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function QueueHubPage() {
   const params = useParams();
@@ -29,7 +30,7 @@ export default function QueueHubPage() {
     fetchEvent();
   }, [code]);
 
-  if (loading) return <div className="p-8 flex items-center justify-center min-h-[400px]"><div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin"></div></div>;
+  if (loading) return <PageSkeleton />;
   if (!event) return <div className="p-8 text-center text-red-500">Event not found.</div>;
 
   return (

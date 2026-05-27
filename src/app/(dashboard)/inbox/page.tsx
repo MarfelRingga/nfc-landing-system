@@ -45,7 +45,16 @@ export default function InboxPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMessages(data || []);
+      const fetched = data || [];
+      setMessages(fetched);
+
+      // Update lastViewedInboxTime to the newest message's timestamp to prevent clock-skew problems
+      if (fetched.length > 0) {
+        localStorage.setItem('lastViewedInboxTime', fetched[0].created_at);
+      } else {
+        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
+      }
+      window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -64,7 +73,16 @@ export default function InboxPage() {
 
       if (error) throw error;
       
-      setMessages(messages.filter(msg => msg.id !== id));
+      const remaining = messages.filter(msg => msg.id !== id);
+      setMessages(remaining);
+
+      // Update lastViewedInboxTime to the remaining newest message's timestamp
+      if (remaining.length > 0) {
+        localStorage.setItem('lastViewedInboxTime', remaining[0].created_at);
+      } else {
+        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
+      }
+      window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {
       console.error('Error deleting message:', error);
       setErrorMessage('Failed to delete message');

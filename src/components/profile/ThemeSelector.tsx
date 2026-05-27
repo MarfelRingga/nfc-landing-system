@@ -1,33 +1,54 @@
 import React, { useMemo } from 'react';
-import { CheckCircle2, Link as LinkIcon } from 'lucide-react';
 import { ProfileMode } from '@/lib/types/profile';
 import { getThemesByMode, getTheme } from '@/lib/themePresets';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 
 interface ThemeSelectorProps {
   currentMode: ProfileMode;
   currentTheme: string;
   onThemeSelect: (theme: string) => void;
-  profilePreview?: {
-    name: string;
-    status: string;
-    links: { title: string; url: string }[];
-  };
 }
+
+const getPreviewColors = (themeId: string, colors: any) => {
+  switch (themeId) {
+    case 'vibrant':
+      return {
+        c1: 'linear-gradient(135deg, #fce7f3 0%, #dbeafe 100%)', // real pastel card gradient
+        c2: '#7c3aed', // vibrant Purple accent
+      };
+    case 'playful':
+      return {
+        c1: '#fffbeb', // cream background
+        c2: '#f59e0b', // playful Amber
+      };
+    case 'corporate':
+      return {
+        c1: '#f8fafc', // corporate slate background
+        c2: '#1d4ed8', // professional Blue accent
+      };
+    case 'minimal':
+      return {
+        c1: '#f8fafc', // minimal slate theme background
+        c2: '#0f172a', // minimal deep slate/black focus
+      };
+    case 'gradient':
+      return {
+        c1: 'linear-gradient(to bottom right, #0f172a, #312e81)', // real dark cosmic background gradient
+        c2: '#38bdf8', // vivid neon Sky Blue accent
+      };
+    default:
+      return {
+        c1: colors.background,
+        c2: colors.primary,
+      };
+  }
+};
 
 export function ThemeSelector({
   currentMode,
   currentTheme,
   onThemeSelect,
-  profilePreview = {
-    name: 'Sarah Williams',
-    status: 'Graphic Designer & Illustrator',
-    links: [
-      { title: 'Portfolio', url: '#' },
-      { title: 'Instagram', url: '#' }
-    ]
-  }
 }: ThemeSelectorProps) {
   const availableThemes = useMemo(() => getThemesByMode(currentMode), [currentMode]);
   
@@ -43,140 +64,38 @@ export function ThemeSelector({
   if (!activeThemeConfig) return null;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full">
-      {/* Left: Theme Selection */}
-      <div className="w-full lg:w-1/2 flex flex-col gap-4">
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0">
-          {availableThemes.map((theme) => {
-            const isSelected = theme.id === currentTheme;
-            return (
-              <motion.button
-                key={theme.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => onThemeSelect(theme.id)}
-                className={cn(
-                  "relative flex flex-col items-start p-4 rounded-xl border text-left transition-all shrink-0 snap-start w-[240px] lg:w-auto",
-                  isSelected
-                    ? "border-slate-900 bg-slate-50 shadow-sm ring-1 ring-slate-900"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                )}
-              >
-                {/* Color Swatches */}
-                <div className="flex gap-2 mb-3">
-                  <div 
-                    className="w-8 h-8 rounded-full shadow-inner border border-black/5"
-                    style={{ background: theme.colors.background }}
-                  />
-                  <div 
-                    className="w-8 h-8 rounded-full shadow-inner border border-black/5"
-                    style={{ background: theme.colors.primary }}
-                  />
-                  <div 
-                    className="w-8 h-8 rounded-full shadow-inner border border-black/5"
-                    style={{ background: theme.colors.accent }}
-                  />
-                </div>
-
-                <h4 className="font-bold text-slate-900 mb-1">{theme.name}</h4>
-                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                  {theme.description}
-                </p>
-
-                {isSelected && (
-                  <div className="absolute top-4 right-4">
-                    <CheckCircle2 className="w-5 h-5 text-slate-900 fill-slate-900" style={{ color: "white" }} />
-                  </div>
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Right: Live Preview */}
-      <div className="w-full lg:w-1/2 flex flex-col">
-        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 hidden lg:block">Live Preview</h3>
-        <div className="relative flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-8 flex items-center justify-center min-h-[400px] overflow-hidden">
-          
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeThemeConfig.name} // re-render on theme change
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-[320px] shadow-xl overflow-hidden border border-black/5 flex flex-col"
-              style={{
-                background: activeThemeConfig.colors.background,
-                color: activeThemeConfig.colors.text,
-                fontFamily: activeThemeConfig.fonts.body,
-                borderRadius: activeThemeConfig.borderRadius,
-              }}
+    <div className="w-full">
+      <div className="flex flex-wrap gap-2.5 justify-start">
+        {availableThemes.map((theme) => {
+          const isSelected = theme.id === currentTheme;
+          const preview = getPreviewColors(theme.id, theme.colors);
+          return (
+            <motion.button
+              key={theme.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onThemeSelect(theme.id)}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all duration-200 font-semibold text-sm border-[1.5px]",
+                isSelected
+                  ? "bg-slate-100/80 border-slate-400 text-slate-900 shadow-inner backdrop-blur-sm font-extrabold"
+                  : "bg-white/80 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+              )}
             >
-              {/* Header area */}
-              <div 
-                className="relative h-24 sm:h-32 w-full shrink-0"
-                style={{ background: activeThemeConfig.colors.cardBg }}
-              />
-              
-              <div className="px-6 pb-8 pt-0 flex flex-col items-center relative z-10 flex-1">
-                {/* Avatar Placeholder */}
+              <div className="flex shrink-0 items-center">
                 <div 
-                  className="w-20 h-20 rounded-full border-4 shadow-sm -mt-10 mb-4 flex items-center justify-center text-xl font-bold"
-                  style={{ 
-                    borderColor: activeThemeConfig.colors.background,
-                    backgroundColor: activeThemeConfig.colors.primary,
-                    color: activeThemeConfig.colors.secondary
-                  }}
-                >
-                  {profilePreview.name.charAt(0)}
-                </div>
-
-                <h2 
-                  className="text-xl sm:text-2xl font-bold text-center mb-1 w-full truncate"
-                  style={{ fontFamily: activeThemeConfig.fonts.heading }}
-                >
-                  {profilePreview.name}
-                </h2>
-                
-                <p 
-                  className="text-sm text-center mb-6 opacity-80 w-full truncate"
-                >
-                  {profilePreview.status}
-                </p>
-
-                {/* Links */}
-                <div className="w-full space-y-3">
-                  {profilePreview.links.map((link, idx) => (
-                    <motion.a
-                      key={idx}
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex items-center justify-between w-full p-4 rounded-xl shadow-sm border transition-all"
-                      style={{
-                        backgroundColor: activeThemeConfig.colors.secondary,
-                        borderColor: 'transparent',
-                        color: activeThemeConfig.colors.text,
-                        borderRadius: activeThemeConfig.borderRadius,
-                      }}
-                    >
-                      <span className="font-semibold text-sm truncate">{link.title}</span>
-                      <div 
-                        className="w-6 h-6 rounded-full flex items-center justify-center opacity-80"
-                        style={{ backgroundColor: activeThemeConfig.colors.accent, color: '#fff' }}
-                      >
-                        <LinkIcon className="w-3 h-3" />
-                      </div>
-                    </motion.a>
-                  ))}
-                </div>
+                  className="w-3.5 h-3.5 rounded-full shadow-inner border border-black/10 z-10"
+                  style={{ background: preview.c1 }}
+                />
+                <div 
+                  className="w-3.5 h-3.5 rounded-full shadow-inner border border-black/10 -ml-1.5"
+                  style={{ background: preview.c2 }}
+                />
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+              <span className="leading-none pt-0.5">{theme.name}</span>
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

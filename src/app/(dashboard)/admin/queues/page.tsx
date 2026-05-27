@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Settings, Plus, Camera, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function AdminPhotoboothPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -74,6 +75,8 @@ export default function AdminPhotoboothPage() {
     }
     setIsCreating(false);
   };
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -172,11 +175,7 @@ export default function AdminPhotoboothPage() {
       </div>
 
       <div className="space-y-4 pt-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin"></div>
-          </div>
-        ) : events.length === 0 ? (
+        {events.length === 0 ? (
           <p className="text-center text-slate-500">No events found.</p>
         ) : (
           events.map(event => (

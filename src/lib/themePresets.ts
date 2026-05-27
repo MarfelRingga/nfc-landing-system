@@ -18,6 +18,11 @@ export interface ThemeConfig {
     background: string;
     text: string;
     cardBg: string;
+    cardBorder: string;
+    linkBg: string;
+    linkBorder: string;
+    inputBg?: string; // used in MessageForm
+    inputBorder?: string; // used in MessageForm
   };
   /** Typography configuration */
   fonts: {
@@ -41,41 +46,28 @@ export interface ThemeConfig {
  * style={{ backgroundColor: theme.colors.background }}
  */
 export const themePresets: Record<ThemePreset, ThemeConfig> = {
-  vibrant: {
-    name: 'Vibrant',
-    description: 'High energy, bold colors, and strong contrast.',
-    mode: ['casual', 'creative'],
+  minimal: {
+    name: 'Minimal',
+    description: 'Stark, highly legible, monochromatic focus.',
+    mode: ['professional', 'creative', 'casual'],
     colors: {
-      primary: '#7c3aed', // Purple
-      secondary: '#f3f4f6', // Light gray
-      accent: '#ec4899', // Pink
-      background: '#ffffff',
-      text: '#111827',
-      cardBg: 'linear-gradient(135deg, #fce7f3 0%, #dbeafe 100%)'
+      primary: '#0f172a',
+      secondary: '#f8fafc',
+      accent: '#64748b',
+      background: '#f8fafc',
+      text: '#0f172a',
+      cardBg: '#ffffff',
+      cardBorder: '#f1f5f9',
+      linkBg: '#f8fafc',
+      linkBorder: '#f1f5f9',
+      inputBg: '#ffffff',
+      inputBorder: '#e2e8f0'
     },
     fonts: {
-      heading: 'var(--font-sans), system-ui, sans-serif',
-      body: 'var(--font-sans), system-ui, sans-serif'
+      heading: 'var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-body), system-ui, sans-serif'
     },
-    borderRadius: '1rem'
-  },
-  playful: {
-    name: 'Playful',
-    description: 'Bright, colorful, and heavily rounded for a friendly vibe.',
-    mode: ['casual'],
-    colors: {
-      primary: '#f59e0b', // Amber
-      secondary: '#fef3c7', // Light Amber
-      accent: '#10b981', // Emerald
-      background: '#fffbeb',
-      text: '#451a03',
-      cardBg: '#ffffff'
-    },
-    fonts: {
-      heading: 'var(--font-sans), system-ui, sans-serif',
-      body: 'var(--font-sans), system-ui, sans-serif'
-    },
-    borderRadius: '1.5rem'
+    borderRadius: '1.25rem' // clean modern rounded corners matching the high-quality layout
   },
   corporate: {
     name: 'Corporate',
@@ -87,31 +79,64 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
       accent: '#2563eb', // Blue 600
       background: '#f8fafc', // Slate 50
       text: '#0f172a', // Slate 900
-      cardBg: '#ffffff'
+      cardBg: '#ffffff',
+      cardBorder: '#1d4ed820',
+      linkBg: '#e0e7ff',
+      linkBorder: 'transparent',
+      inputBg: '#ffffff',
+      inputBorder: '#0f172a20'
     },
     fonts: {
-      heading: 'var(--font-sans), system-ui, sans-serif', // Inter or standard sans
-      body: 'var(--font-sans), system-ui, sans-serif'
+      heading: 'var(--font-heading), system-ui, sans-serif', // Inter or standard sans
+      body: 'var(--font-body), system-ui, sans-serif'
     },
     borderRadius: '0.375rem' // Standard rounded-md
   },
-  minimal: {
-    name: 'Minimal',
-    description: 'Stark, highly legible, monochromatic focus.',
-    mode: ['professional', 'creative', 'casual'],
+  playful: {
+    name: 'Playful',
+    description: 'Bright, colorful, and heavily rounded for a friendly vibe.',
+    mode: ['casual'],
     colors: {
-      primary: '#000000',
-      secondary: '#f5f5f5',
-      accent: '#333333',
-      background: '#ffffff',
-      text: '#000000',
-      cardBg: '#fafafa'
+      primary: '#f59e0b', // Amber
+      secondary: '#fef3c7', // Light Amber
+      accent: '#10b981', // Emerald
+      background: '#fffbeb',
+      text: '#451a03',
+      cardBg: '#ffffff',
+      cardBorder: '#f59e0b20',
+      linkBg: '#fef3c7',
+      linkBorder: 'transparent',
+      inputBg: '#ffffff',
+      inputBorder: '#451a0320'
     },
     fonts: {
-      heading: 'var(--font-mono), monospace', // e.g., Space Grotesk/JetBrains
-      body: 'var(--font-sans), system-ui, sans-serif' // Inter
+      heading: 'var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-body), system-ui, sans-serif'
     },
-    borderRadius: '0px' // Sharp edges
+    borderRadius: '1.5rem'
+  },
+  vibrant: {
+    name: 'Vibrant',
+    description: 'High energy, bold colors, and strong contrast.',
+    mode: ['casual', 'creative'],
+    colors: {
+      primary: '#7c3aed', // Purple
+      secondary: '#f3f4f6', // Light gray
+      accent: '#ec4899', // Pink
+      background: '#ffffff',
+      text: '#111827',
+      cardBg: 'linear-gradient(135deg, #fce7f3 0%, #dbeafe 100%)',
+      cardBorder: '#7c3aed20',
+      linkBg: '#f3f4f6',
+      linkBorder: 'transparent',
+      inputBg: '#ffffff',
+      inputBorder: '#11182720'
+    },
+    fonts: {
+      heading: 'var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-body), system-ui, sans-serif'
+    },
+    borderRadius: '1rem'
   },
   gradient: {
     name: 'Gradient',
@@ -123,11 +148,16 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
       accent: '#38bdf8', // Sky 400
       background: 'linear-gradient(to bottom right, #0f172a, #312e81)',
       text: '#f8fafc',
-      cardBg: 'rgba(255, 255, 255, 0.1)'
+      cardBg: 'rgba(255, 255, 255, 0.1)',
+      cardBorder: 'rgba(255, 255, 255, 0.2)',
+      linkBg: 'rgba(255, 255, 255, 0.05)',
+      linkBorder: 'rgba(255, 255, 255, 0.1)',
+      inputBg: 'rgba(255, 255, 255, 0.05)',
+      inputBorder: 'rgba(255, 255, 255, 0.1)'
     },
     fonts: {
-      heading: 'var(--font-sans), system-ui, sans-serif',
-      body: 'var(--font-sans), system-ui, sans-serif'
+      heading: 'var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-body), system-ui, sans-serif'
     },
     borderRadius: '1.25rem'
   }
@@ -141,7 +171,6 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
  */
 export function getThemesByMode(mode: ProfileMode): (ThemeConfig & { id: ThemePreset })[] {
   return (Object.entries(themePresets) as [ThemePreset, ThemeConfig][])
-    .filter(([_, config]) => config.mode.includes(mode))
     .map(([id, config]) => ({ id, ...config }));
 }
 

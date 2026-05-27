@@ -72,7 +72,7 @@ function ClaimContent() {
 
 export default function ClaimPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#F4F3EE] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#a299af]" /></div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <ClaimContent />
     </Suspense>
   );

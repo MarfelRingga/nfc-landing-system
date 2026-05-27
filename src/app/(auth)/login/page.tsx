@@ -46,17 +46,18 @@ function LoginForm() {
       }
 
       // Check if identifier is an email (contains @ symbol)
-      const isEmail = identifier.includes('@');
+      const cleanIdentifier = identifier.trim();
+      const isEmail = cleanIdentifier.includes('@');
       
       let signInData;
       
       if (isEmail) {
         signInData = {
-          email: identifier,
+          email: cleanIdentifier,
           password: password,
         };
       } else {
-        const formattedPhone = formatIndonesianPhoneNumber(identifier);
+        const formattedPhone = formatIndonesianPhoneNumber(cleanIdentifier);
         signInData = {
           phone: formattedPhone,
           password: password,

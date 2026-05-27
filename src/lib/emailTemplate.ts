@@ -1,4 +1,18 @@
-export const getWelcomeEmailTemplate = (name: string) => {
+export const getBaseEmailHtml = (title: string, bodyHtml: string, ctaText?: string, ctaUrl?: string) => {
+  const ctaButtonHtml = ctaText && ctaUrl ? `
+    <!-- CTA Button -->
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+      <tr>
+        <td>
+          <a href="${ctaUrl}"
+             style="display:inline-block;padding:16px 32px;background-color:#1a1a1a;color:#ffffff;text-decoration:none;border-radius:99px;font-size:15px;font-weight:500;text-align:center;">
+            ${ctaText}
+          </a>
+        </td>
+      </tr>
+    </table>
+  ` : '';
+
   return `
     <div style="margin:0;padding:0;background-color:#f4f3ee;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" 
@@ -27,32 +41,17 @@ export const getWelcomeEmailTemplate = (name: string) => {
 
                   <!-- Title -->
                   <h1 style="margin:0;font-size:26px;font-weight:600;color:#1a1a1a;letter-spacing:-0.5px;line-height:1.2;">
-                    Your Rifelo is ready.
+                    ${title}
                   </h1>
 
                   <div style="height:16px;"></div>
 
                   <!-- Body -->
-                  <p style="margin:0;font-size:16px;color:#4a4a4a;line-height:1.6;">
-                    Hi ${name},
-                  </p>
-                  <p style="margin:12px 0 0;font-size:16px;color:#4a4a4a;line-height:1.6;">
-                    You can now set up your profile and start sharing your identity instantly. It only takes a minute.
-                  </p>
+                  <div style="margin:0;font-size:16px;color:#4a4a4a;line-height:1.6;">
+                    ${bodyHtml}
+                  </div>
 
-                  <div style="height:36px;"></div>
-
-                  <!-- CTA Button -->
-                  <table cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td>
-                        <a href="https://rifelo.id"
-                           style="display:inline-block;padding:16px 32px;background-color:#1a1a1a;color:#ffffff;text-decoration:none;border-radius:99px;font-size:15px;font-weight:500;text-align:center;">
-                          Set up your profile
-                        </a>
-                      </td>
-                    </tr>
-                  </table>
+                  ${ctaButtonHtml}
 
                 </td>
               </tr>
@@ -85,4 +84,23 @@ export const getWelcomeEmailTemplate = (name: string) => {
     </div>
   `;
 };
+
+export const getWelcomeEmailTemplate = (name: string, customBody?: string) => {
+  const defaultBody = `Hi {name},\n\nYou can now set up your profile and start sharing your identity instantly. It only takes a minute.`;
+  const body = customBody || defaultBody;
+  const formattedBody = body
+    .replace(/{name}/g, name)
+    .replace(/\n/g, '<br/>');
+  return getBaseEmailHtml('Your Rifelo is ready.', formattedBody, 'Set up your profile', 'https://rifelo.id');
+};
+
+export const getSubscribeEmailTemplate = (email: string, customBody?: string) => {
+  const defaultBody = `Thank you for subscribing to Rifelo updates.\n\nYou will be the first to know about our latest NFC features, exclusive wristband drops, and digital networking tips.`;
+  const body = customBody || defaultBody;
+  const formattedBody = body
+    .replace(/{email}/g, email)
+    .replace(/\n/g, '<br/>');
+  return getBaseEmailHtml('Welcome to Rifelo Updates! 🚀', formattedBody, 'Visit Website', 'https://rifelo.id');
+};
+
 

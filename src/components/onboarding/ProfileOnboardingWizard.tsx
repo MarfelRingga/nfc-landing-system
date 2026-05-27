@@ -28,7 +28,7 @@ export function ProfileOnboardingWizard() {
 
   // Form State
   const [mode, setMode] = useState<ProfileMode>('casual');
-  const [theme, setTheme] = useState<string>('vibrant');
+  const [theme, setTheme] = useState<string>('minimal');
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [links, setLinks] = useState<LinkData[]>([]);
 
@@ -196,14 +196,6 @@ export function ProfileOnboardingWizard() {
                     currentMode={mode}
                     currentTheme={theme}
                     onThemeSelect={setTheme}
-                    profilePreview={{
-                      name: formData.full_name || 'Your Name',
-                      status: formData.job_title || 'Your Tagline',
-                      links: links.length > 0 ? links.slice(0, 2) : [
-                        { title: 'My Portfolio', url: '#' },
-                        { title: 'Contact Me', url: '#' }
-                      ]
-                    }}
                   />
                 </div>
               )}

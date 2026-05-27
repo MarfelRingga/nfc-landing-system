@@ -87,9 +87,7 @@ export const getValidationErrors = (
       errors.push({ field: 'company', message: 'Company name should be 50 characters or less.', type: 'error' });
     }
 
-    if (!email) {
-      errors.push({ field: 'email', message: 'Email address is required for professional mode.', type: 'error' });
-    } else if (!isValidEmail(email)) {
+    if (email && !isValidEmail(email)) {
       errors.push({ field: 'email', message: 'Please enter a valid email address so recruiters can reach you.', type: 'error' });
     }
 

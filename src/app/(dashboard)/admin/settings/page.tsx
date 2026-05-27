@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, Globe, Database } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon, Plus, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, Globe, Database, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getPlatformInfo } from '@/lib/platforms';
@@ -19,6 +19,11 @@ export default function AdminSettingsPage() {
   const [getYoursNowLink, setGetYoursNowLink] = useState('');
   const [globalLinks, setGlobalLinks] = useState<AdminLink[]>([]);
   const [expandedLinks, setExpandedLinks] = useState<Record<string, boolean>>({});
+
+  const [emailWelcomeSubject, setEmailWelcomeSubject] = useState('');
+  const [emailWelcomeBody, setEmailWelcomeBody] = useState('');
+  const [emailSubscribeSubject, setEmailSubscribeSubject] = useState('');
+  const [emailSubscribeBody, setEmailSubscribeBody] = useState('');
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,7 +40,11 @@ export default function AdminSettingsPage() {
           .in('id', [
             'contact_support_link', 
             'get_yours_now_link', 
-            'global_platforms_links'
+            'global_platforms_links',
+            'email_welcome_subject',
+            'email_welcome_body',
+            'email_subscribe_subject',
+            'email_subscribe_body'
           ]);
 
         if (error) {
@@ -48,6 +57,10 @@ export default function AdminSettingsPage() {
           const linkSetting = data.find(s => s.id === 'contact_support_link');
           const getYoursSetting = data.find(s => s.id === 'get_yours_now_link');
           const globalLinksSetting = data.find(s => s.id === 'global_platforms_links');
+          const welcomeSubject = data.find(s => s.id === 'email_welcome_subject');
+          const welcomeBody = data.find(s => s.id === 'email_welcome_body');
+          const subscribeSubject = data.find(s => s.id === 'email_subscribe_subject');
+          const subscribeBody = data.find(s => s.id === 'email_subscribe_body');
           
           if (linkSetting) setContactSupportLink(linkSetting.value || '');
           if (getYoursSetting) setGetYoursNowLink(getYoursSetting.value || '');
@@ -56,6 +69,10 @@ export default function AdminSettingsPage() {
               setGlobalLinks(JSON.parse(globalLinksSetting.value));
             } catch (e) {}
           }
+          if (welcomeSubject) setEmailWelcomeSubject(welcomeSubject.value || '');
+          if (welcomeBody) setEmailWelcomeBody(welcomeBody.value || '');
+          if (subscribeSubject) setEmailSubscribeSubject(subscribeSubject.value || '');
+          if (subscribeBody) setEmailSubscribeBody(subscribeBody.value || '');
         }
       } catch (err: any) {
         console.error('Error fetching settings:', err);
@@ -101,7 +118,11 @@ export default function AdminSettingsPage() {
         .upsert([
           { id: 'contact_support_link', value: contactSupportLink },
           { id: 'get_yours_now_link', value: getYoursNowLink },
-          { id: 'global_platforms_links', value: JSON.stringify(globalLinks) }
+          { id: 'global_platforms_links', value: JSON.stringify(globalLinks) },
+          { id: 'email_welcome_subject', value: emailWelcomeSubject },
+          { id: 'email_welcome_body', value: emailWelcomeBody },
+          { id: 'email_subscribe_subject', value: emailSubscribeSubject },
+          { id: 'email_subscribe_body', value: emailSubscribeBody }
         ]);
 
       if (error) {
@@ -374,6 +395,109 @@ CREATE POLICY "Allow admin write access on app_settings"
             )}
             Save Settings
           </button>
+        </div>
+      </div>
+
+      {/* Email Templates Customization Box */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+          <Mail className="w-5 h-5 text-slate-900" />
+          <h2 className="text-lg font-bold text-slate-900">Custom Email Templates</h2>
+        </div>
+
+        <p className="text-xs text-slate-500">
+          Customize the subjects and main message bodies of automated emails sent to users. 
+          Use the <code>{`{name}`}</code> placeholder for user's username/name, and <code>{`{email}`}</code> for subscriber's email.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Welcome Email Card */}
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/50">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+              Welcome Email Template
+            </h3>
+            <p className="text-[11px] text-slate-500 leading-normal">
+              Sent automatically once a new user registers on Rifelo.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Email Subject
+                </label>
+                <input
+                  type="text"
+                  value={emailWelcomeSubject}
+                  onChange={(e) => setEmailWelcomeSubject(e.target.value)}
+                  placeholder="Welcome to Rifelo! 🎉 (Default)"
+                  className="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-xs transition-all bg-white"
+                  disabled={needsMigration}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Message Body
+                </label>
+                <textarea
+                  rows={6}
+                  value={emailWelcomeBody || ''}
+                  onChange={(e) => setEmailWelcomeBody(e.target.value)}
+                  placeholder={`Hi {name},\n\nYou can now set up your profile and start sharing your identity instantly. It only takes a minute.`}
+                  className="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-xs font-mono transition-all bg-white whitespace-pre-wrap"
+                  disabled={needsMigration}
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Supports <code>{`{name}`}</code> placeholder.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Subscribe Updates Email Card */}
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/50">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Subscribe Updates Email Template
+            </h3>
+            <p className="text-[11px] text-slate-500 leading-normal">
+              Sent automatically once a user subscribes to Stay Connected newsletter updates.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Email Subject
+                </label>
+                <input
+                  type="text"
+                  value={emailSubscribeSubject}
+                  onChange={(e) => setEmailSubscribeSubject(e.target.value)}
+                  placeholder="Welcome to Rifelo Updates! 🚀 (Default)"
+                  className="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-xs transition-all bg-white"
+                  disabled={needsMigration}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Message Body
+                </label>
+                <textarea
+                  rows={6}
+                  value={emailSubscribeBody || ''}
+                  onChange={(e) => setEmailSubscribeBody(e.target.value)}
+                  placeholder={`Thank you for subscribing to Rifelo updates.\n\nYou will be the first to know about our latest NFC features, exclusive wristband drops, and digital networking tips.`}
+                  className="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-xs font-mono transition-all bg-white whitespace-pre-wrap"
+                  disabled={needsMigration}
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Supports <code>{`{email}`}</code> placeholder.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Plus, Trash2, Smartphone, Search, X, AlertCircle, CheckCircle2, Copy, Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 interface NFCTag {
   id: string;
@@ -145,6 +146,8 @@ export default function AdminTagsPage() {
     t.user_id?.includes(searchQuery)
   );
 
+  if (isLoading) return <PageSkeleton />;
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -174,15 +177,10 @@ export default function AdminTagsPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-        </div>
-      ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
                 <tr>
                   <th className="px-6 py-4 font-medium">Token</th>
                   <th className="px-6 py-4 font-medium">Status</th>
@@ -266,7 +264,6 @@ export default function AdminTagsPage() {
             </table>
           </div>
         </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>

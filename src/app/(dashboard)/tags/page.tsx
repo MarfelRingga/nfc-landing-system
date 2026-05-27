@@ -30,7 +30,7 @@ interface NFCTag {
 
 export default function NFCTagsPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <NFCTagsContent />
     </Suspense>
   );
@@ -387,6 +387,8 @@ function NFCTagsContent() {
     }
   };
 
+  if (isLoading) return <PageSkeleton />;
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -403,9 +405,7 @@ function NFCTagsContent() {
         </button>
       </div>
 
-      {isLoading ? (
-        <PageSkeleton />
-      ) : tags.length === 0 ? (
+      {tags.length === 0 ? (
         <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
           <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900">No tags connected</h3>

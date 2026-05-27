@@ -60,7 +60,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
       label: 'Job Title',
       placeholder: 'e.g., Founder, Software Engineer',
       type: 'text',
-      required: true,
+      required: false,
       icon: 'Briefcase',
       maxLength: 60
     },
@@ -76,7 +76,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
       label: 'Work Email',
       placeholder: 'you@company.com',
       type: 'email',
-      required: true,
+      required: false,
       icon: 'Mail',
       autoFormat: 'email'
     },
@@ -110,7 +110,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
       label: 'Creative Role',
       placeholder: 'e.g., UI/UX Designer, Illustrator',
       type: 'text',
-      required: true,
+      required: false,
       icon: 'Palette',
       maxLength: 60
     },
@@ -126,7 +126,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
       label: 'Contact Email',
       placeholder: 'hello@yourdomain.com',
       type: 'email',
-      required: true,
+      required: false,
       icon: 'Mail',
       autoFormat: 'email'
     },
