@@ -1008,7 +1008,7 @@ export default function LandingPage() {
             </div>
 
             <Link 
-              href="/join-rifelo"
+              href="/nfcwristband"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-full font-medium hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 text-sm"
             >
               Get Started <ArrowRight className="w-4 h-4" />
