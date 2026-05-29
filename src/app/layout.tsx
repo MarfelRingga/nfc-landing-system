@@ -21,7 +21,7 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://rifelo.id'),
-  title: "Rifelo - Tap Once. Share Everything. No App Required.",
+  title: "Rifelo | NFC Identity Platform",
   description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",
   keywords: ["NFC wristband", "digital business card", "networking", "Digital Identity", "NFC", "Contact Sharing", "Rifelo", "Social Profile"],
   authors: [{ name: "Rifelo Team" }],
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       { url: 'https://i.ibb.co.com/20WNbGMp/favicon-192x192.png', type: 'image/png' },
     ],
   },
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.json',
   openGraph: {
     title: "Rifelo - Your Identity, Instantly Shared",
     description: "Rifelo is a digital identity platform for instant interaction. Share who you are and connect with others effortlessly with a simple tap.",

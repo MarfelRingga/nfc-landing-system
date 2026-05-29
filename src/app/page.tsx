@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue, useAnimation } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue, useAnimation, animate } from 'motion/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
@@ -29,11 +29,114 @@ import {
   Github,
   AtSign,
   Music,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Zap,
+  Smartphone,
+  RefreshCw,
+  Activity,
+  Inbox,
+  Radio
 } from 'lucide-react';
 
 import { decodeMessageSettings } from '@/lib/messageSettings';
 import { getPlatformInfo } from '@/lib/platforms';
+
+function SpecialCustomDirectMockup() {
+  const [urlText, setUrlText] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const fullText = 'rifelo.id/nfcwristband';
+    let isMounted = true;
+    
+    const runCycle = async () => {
+      while (isMounted) {
+        // Typing
+        for (let i = 0; i <= fullText.length; i++) {
+          if (!isMounted) return;
+          setUrlText(fullText.substring(0, i));
+          await new Promise((resolve) => setTimeout(resolve, 80));
+        }
+        
+        // Hold
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        if (!isMounted) return;
+        setIsSaved(true);
+        
+        // Hold saved state
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        if (!isMounted) return;
+        setIsSaved(false);
+        
+        // Backspacing
+        for (let i = fullText.length; i >= 0; i--) {
+          if (!isMounted) return;
+          setUrlText(fullText.substring(0, i));
+          await new Promise((resolve) => setTimeout(resolve, 40));
+        }
+        
+        // Hold empty
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+    };
+
+    runCycle();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="w-[85%] max-w-[190px] mx-auto bg-white rounded-lg shadow-md border border-slate-100 p-2.5 relative z-10 select-none text-left">
+      <div className="flex justify-between items-center mb-1.5 animate-fade-in">
+         <div className="text-[9px] font-bold text-slate-800">Edit Tag</div>
+         <div className="w-3.5 h-3.5 rounded-full bg-slate-50 flex items-center justify-center">
+            <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+         </div>
+      </div>
+
+      <div className="mb-1.5">
+         <div className="text-[6.5px] font-medium text-slate-400 mb-0.5">Interaction Mode</div>
+         <div className="flex items-center justify-between w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white">
+            <span className="text-[7.5px] font-medium text-slate-800 truncate">Custom URL Redirect</span>
+            <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><polyline points="6 9 12 15 18 9"></polyline></svg>
+         </div>
+      </div>
+
+      <div className="space-y-1">
+         <div>
+            <div className="text-[6.5px] font-medium text-slate-400 mb-0.5">Custom URL</div>
+            <div className={`w-full px-1.5 py-1 rounded-md border transition-all duration-300 ${isSaved ? 'border-emerald-500/50 bg-emerald-50/40 shadow-[0_0_0_1px_rgba(16,185,129,0.1)]' : 'border-purple-500/50 bg-purple-50/30 shadow-[0_0_0_1px_rgba(168,85,247,0.1)]'} flex items-center overflow-hidden`}>
+               <div className="flex items-center min-w-max">
+                  <span className={`text-[7.5px] font-medium font-mono transition-colors duration-300 ${isSaved ? 'text-emerald-700' : 'text-slate-800'}`}>
+                    {urlText}
+                  </span>
+                  <motion.div 
+                     animate={{ opacity: [1, 0] }}
+                     transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                     className={`w-px h-2.5 ml-0.5 ${isSaved ? 'bg-emerald-600' : 'bg-slate-800'}`}
+                  />
+               </div>
+            </div>
+         </div>
+      </div>
+      
+      <div className="mt-2.5">
+         <motion.div 
+            animate={isSaved ? { scale: [1, 0.95, 1] } : {}}
+            transition={{ duration: 0.3 }}
+            className={`w-full text-white rounded-md py-1 flex items-center justify-center gap-1 shadow-sm transition-all duration-300 ${isSaved ? 'bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'}`}
+         >
+            <span className="text-[7.5px] font-bold pb-px">
+              {isSaved ? 'Changes Saved' : 'Save Changes'}
+            </span>
+         </motion.div>
+      </div>
+    </div>
+  );
+}
 
 interface PremiumDesignCardProps {
   item: {
@@ -53,7 +156,25 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-12, 12]);
 
-  const zIndexVal = isFront ? 30 : diff === 1 ? 20 : 10;
+  const targetZIndex = isFront ? 30 : diff === 1 ? 20 : 10;
+  const [zIndexVal, setZIndexVal] = useState(targetZIndex);
+
+  useEffect(() => {
+    if (isFront) {
+      setZIndexVal(30);
+    } else if (diff === 1) {
+      setZIndexVal(20);
+    } else {
+      // Keep z-index higher (e.g., 25) to slide underneath the top card (30) 
+      // but stay on top of the middle card (20) during transit, then settle to 10
+      setZIndexVal(25);
+      const timer = setTimeout(() => {
+        setZIndexVal(10);
+      }, 320);
+      return () => clearTimeout(timer);
+    }
+  }, [isFront, diff]);
+
   const scaleVal = diff === 0 ? 1 : diff === 1 ? 0.94 : 0.88;
   const yVal = diff === 0 ? 0 : diff === 1 ? 16 : 32;
 
@@ -63,8 +184,10 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
     const swipeVelocity = info.velocity.x;
 
     // Menentukan jika drag melewati batas sehingga digeser
-    if (swipeOffset < -80 || swipeVelocity < -200 || swipeOffset > 80 || swipeVelocity > 200) {
+    if (swipeOffset < -60 || swipeVelocity < -200) {
       setActiveCarouselSlide((prev) => (prev + 1) % 3);
+    } else if (swipeOffset > 60 || swipeVelocity > 200) {
+      setActiveCarouselSlide((prev) => (prev - 1 + 3) % 3);
     }
   };
 
@@ -82,9 +205,10 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
         x: 0,
       }}
       transition={{
-        scale: { type: "tween", ease: "easeOut", duration: 0.25 },
-        y: { type: "tween", ease: "easeOut", duration: 0.25 },
-        x: { type: "tween", ease: "easeOut", duration: 0.22 },
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        mass: 1,
       }}
       drag={isFront ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
@@ -98,14 +222,14 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
       className={`absolute inset-0 bg-white rounded-[2.5rem] p-5 shadow-[0_8px_25px_rgba(0,0,0,0.06)] border border-[#0c0e0b]/5 flex flex-col items-center group ${isFront ? 'cursor-grab active:cursor-grabbing hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)]' : 'cursor-pointer'}`}
     >
       <div className="w-full aspect-square relative rounded-[1.75rem] overflow-hidden bg-[#F4F3EE]/40 mb-4 flex items-center justify-center border border-black/5 shadow-inner select-none pointer-events-none">
-         <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-6' : 'object-cover'} select-none pointer-events-none`} referrerPolicy="no-referrer" />
+         <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-2' : 'object-cover'} select-none pointer-events-none`} referrerPolicy="no-referrer" />
       </div>
       
-      <div className="text-center w-full px-2 pb-1 flex-grow flex flex-col justify-between select-none pointer-events-none">
+      <div className="text-left w-full px-3 pb-1 flex-grow flex flex-col justify-between select-none pointer-events-none">
         <div>
-          <span className="text-[9px] uppercase tracking-widest font-bold text-[#a299af] mb-1 block">{item.badge}</span>
-          <h3 className="font-bold text-base text-[#0c0e0b] mb-1.5">{item.title}</h3>
-          <p className="text-xs text-[#0c0e0b]/60 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-[#a299af]/90 mb-2 block">{item.badge}</span>
+          <h3 className="text-lg font-bold tracking-tight text-[#0c0e0b] mb-2">{item.title}</h3>
+          <p className="text-xs sm:text-sm text-[#0c0e0b]/70 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
         </div>
       </div>
     </motion.div>
@@ -149,7 +273,6 @@ export default function LandingPage() {
   const [showDemoMessage, setShowDemoMessage] = useState(true);
   const [demoCircleMembers, setDemoCircleMembers] = useState<any[]>([]);
   
-  const carouselRef = useRef<HTMLDivElement>(null);
   const [activeCarouselSlide, setActiveCarouselSlide] = useState(0);
 
   const [subscribeEmail, setSubscribeEmail] = useState('');
@@ -170,31 +293,6 @@ export default function LandingPage() {
     setSubscribeStatus('success');
   };
 
-  const scrollRAFRef = useRef<number | null>(null);
-
-  const handleCarouselScroll = () => {
-    if (!carouselRef.current) return;
-    if (scrollRAFRef.current) cancelAnimationFrame(scrollRAFRef.current);
-    
-    scrollRAFRef.current = requestAnimationFrame(() => {
-      if (!carouselRef.current) return;
-      const parent = carouselRef.current;
-      const parentCenter = parent.scrollLeft + parent.clientWidth / 2;
-      let closestIndex = 0;
-      let minDistance = Infinity;
-      
-      Array.from(parent.children).forEach((child, index) => {
-        const el = child as HTMLElement;
-        const childCenter = el.offsetLeft + el.clientWidth / 2;
-        const distance = Math.abs(childCenter - parentCenter);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestIndex = index;
-        }
-      });
-      setActiveCarouselSlide(prev => prev !== closestIndex ? closestIndex : prev);
-    });
-  };
   const getDemoMemberName = (index: number) => {
     const defaultNames = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
     if (demoCircleMembers && demoCircleMembers[index] && demoCircleMembers[index].profiles) {
@@ -213,7 +311,7 @@ export default function LandingPage() {
     "sameAs": [
       "https://instagram.com/rifelo.id"
     ],
-    "description": "Rifelo is a digital identity platform that lets you share your profile with a single tap using NFC."
+    "description": "Rifelo is a dynamic profile platform that lets you share your profile with a single tap using NFC."
   };
 
   const handleResonanceDemo = async () => {
@@ -396,7 +494,7 @@ export default function LandingPage() {
               </h1>
               
               <p className="text-[#0c0e0b]/60 max-w-lg mx-auto leading-relaxed text-sm sm:text-base font-medium">
-                No App Required. Instantly share your digital identity, portfolio, and contact info with any smartphone.
+                No App Required. Instantly share your dynamic profile, portfolio, and contact info with any smartphone.
               </p>
               
               <p className="text-[10px] text-[#0c0e0b]/30 uppercase tracking-widest font-semibold mt-6">
@@ -502,21 +600,21 @@ export default function LandingPage() {
       <section id="circle-demo-section" className="min-h-screen flex flex-col items-center justify-center py-16 md:py-24 px-4 sm:px-6 md:px-12 w-full relative z-10 bg-[#F4F3EE]">
 
         {/* View Switcher */}
-        <div className="flex bg-white p-[4px] rounded-full relative w-[280px] h-[44px] mb-8 shadow-md border border-[#aaafbc]/20 shrink-0">
+        <div className="flex bg-white/50 backdrop-blur-md p-[4px] rounded-full relative w-[280px] h-[44px] mb-8 shadow-[0_8px_24px_rgba(12,14,11,0.04)] border border-[#0c0e0b]/10 shrink-0">
           {/* Highlight background */}
           <div 
-            className={`absolute top-[4px] bottom-[4px] w-[calc(50%-4px)] bg-[#1A1A1A] rounded-full transition-all duration-300 ease-out shadow-sm`}
+            className={`absolute top-[4px] bottom-[4px] w-[calc(50%-4px)] bg-white/90 backdrop-blur-sm rounded-full transition-all duration-300 ease-out shadow-sm border border-[#0c0e0b]/5`}
             style={{ left: circleView === 'public' ? '4px' : 'calc(50%)' }}
           />
           <button 
             onClick={() => setCircleView('public')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-semibold transition-colors ${circleView === 'public' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-300 ${circleView === 'public' ? 'text-[#0c0e0b]' : 'text-[#0c0e0b]/45 hover:text-[#0c0e0b]'}`}
           >
             Digital identity
           </button>
           <button 
             onClick={() => setCircleView('member')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-semibold transition-colors ${circleView === 'member' ? 'text-white' : 'text-[#0c0e0b]/60 hover:text-[#0c0e0b]'}`}
+            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-300 ${circleView === 'member' ? 'text-[#0c0e0b]' : 'text-[#0c0e0b]/45 hover:text-[#0c0e0b]'}`}
           >
             Circle
           </button>
@@ -835,14 +933,80 @@ export default function LandingPage() {
           <div className="text-center lg:text-left max-w-xl flex flex-col items-center lg:items-start px-4 shrink-0">
             <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center lg:items-start">
               <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">
-                {circleView === 'public' ? 'Digital Identity' : 'Circle Resonance'}
+                {circleView === 'public' ? 'Dynamic Profile' : 'Circle Resonance'}
               </span>
             </h2>
-            <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8">
+            <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8 lg:mb-10 lg:max-w-md">
               {circleView === 'public' 
                 ? 'Your complete professional identity in one scan. Share your contact info, social links, and portfolio with anyone, anywhere — no app required.' 
                 : 'Resonance happens when your circle comes alive. Bring everyone in, stay active together, and watch the connection build in real time.'}
             </p>
+
+            {/* Feature Highlights to fill empty vertical space on desktop */}
+            <div className="flex flex-col gap-5 sm:gap-6 w-full max-w-md mb-10 lg:mb-12">
+              {circleView === 'public' ? (
+                <>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <Smartphone className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">No App Required</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Works instantly with any modern smartphone using NFC technology. Just tap and share.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Real-Time Updates</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Change your contact info, portfolio, or social links anytime. Your wristband updates instantly.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <Inbox className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Direct Inbox</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Receive messages straight to your profile. Keep your personal contact details private and secure.</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Instant Group Sync</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Connect multiple wristbands simultaneously. Create a unified digital presence for your circle.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <Activity className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Live Activity</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Watch connections build as members interact. Perfect for community events and networking.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
+                      <Radio className="w-4 h-4 text-[#0c0e0b]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Real-Time Resonance</h4>
+                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Experience seamless synchronization across all devices when members interact within the circle.</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <Link 
               href="/join-rifelo"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-full font-medium hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 text-sm"
@@ -877,7 +1041,7 @@ export default function LandingPage() {
         </div>
 
         {/* Desktop View: Grid of Three Cards */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-8 pb-8 items-stretch py-4">
+        <div className="hidden lg:grid lg:grid-cols-3 gap-6 xl:gap-8 pb-8 items-stretch py-4 max-w-5xl mx-auto w-full">
           {[
             {
               title: "Adjustable & Clean Look",
@@ -905,16 +1069,16 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="bg-white/60 backdrop-blur-md rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col items-center group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center"
+                className="bg-white/60 backdrop-blur-md rounded-[2.25rem] p-5 xl:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col items-center group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center"
               >
-                <div className="w-full aspect-square relative rounded-[1.75rem] overflow-hidden bg-[#F4F3EE]/40 mb-6 flex items-center justify-center border border-black/5 shadow-inner">
-                   <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-6 group-hover:scale-105' : 'object-cover group-hover:scale-105'} transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]`} referrerPolicy="no-referrer" />
+                <div className="w-full aspect-[1.1/1] relative rounded-[1.5rem] overflow-hidden bg-[#F4F3EE]/40 mb-5 flex items-center justify-center border border-black/5 shadow-inner">
+                   <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-2 xl:p-3 group-hover:scale-[1.08]' : 'object-cover group-hover:scale-105'} transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]`} referrerPolicy="no-referrer" />
                 </div>
-                <div className="text-center w-full px-2 pb-2 flex-grow flex flex-col justify-between">
+                <div className="text-left w-full px-3 xl:px-4 pb-1 flex-grow flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-[#a299af] mb-2 block">{item.badge}</span>
-                    <h3 className="font-bold text-lg text-[#0c0e0b] mb-3">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium">{item.desc}</p>
+                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-[#a299af]/90 mb-2.5 block">{item.badge}</span>
+                    <h3 className="text-xl md:text-2xl tracking-tight font-bold text-[#0c0e0b] mb-3 leading-tight">{item.title}</h3>
+                    <p className="text-sm md:text-base text-[#0c0e0b]/70 leading-relaxed font-medium">{item.desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -923,8 +1087,8 @@ export default function LandingPage() {
         </div>
 
         {/* Mobile View: Stack Carousel Layout like Paper Sheets */}
-        <div className="lg:hidden relative flex flex-col items-center justify-center py-12 min-h-[520px]">
-          <div className="relative w-[85vw] sm:w-[320px] h-[380px] flex items-center justify-center">
+        <div className="lg:hidden relative flex flex-col items-center justify-center py-12 md:py-16 min-h-[520px] md:min-h-[600px]">
+          <div className="relative w-[85vw] sm:w-[360px] md:w-[420px] h-[380px] md:h-[460px] flex items-center justify-center">
             {[
               {
                 title: "Adjustable & Clean Look",
@@ -983,230 +1147,424 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Demo Section (Timeline Flowcard UI) */}
-      <section id="demo-section" className="py-24 px-4 sm:px-6 md:px-12 max-w-5xl mx-auto w-full relative z-10">
-        <div className="flex flex-col items-center mb-16 text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0c0e0b] mb-4"
-          >
-            Just Tap. That’s It.
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-[#0c0e0b]/60 max-w-2xl text-base sm:text-lg leading-relaxed"
-          >
-            Tap your Rifelo NFC tag to any smartphone and instantly open your digital profile. No apps. No friction. Just seamless interaction.
-          </motion.p>
-        </div>
-
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto px-4 py-8">
-          {/* Card 1: NFC Wristband (col-span-1 md:col-span-5) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="col-span-1 md:col-span-5 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col justify-between h-full cursor-default"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-[#a299af]/5 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100" />
-            
-            <div>
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                  <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
-                </div>
-              </div>
-              
-              <h3 className="font-bold text-sm sm:text-2xl text-[#0c0e0b] mb-1 sm:mb-3">NFC Wristband</h3>
-              <p className="text-[10px] sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium mb-4 sm:mb-8 line-clamp-3 xs:line-clamp-none">
-                Just tap your premium wristband to any phone and your digital identity is shared instantly. Lightweight, skin-friendly, and always active.
-              </p>
-            </div>
-
-            <div className="relative w-full aspect-[4/3] rounded-lg sm:rounded-2xl overflow-hidden bg-[#F4F3EE]/40 border border-[#0c0e0b]/5 flex items-center justify-center mt-auto animate-fade-in">
-              <Image 
-                src="https://i.ibb.co.com/vvsX17bc/wristband.png" 
-                alt="NFC Wristband"
-                fill
-                className="object-contain p-2 sm:p-6 group-hover:scale-105 transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </motion.div>
-
-          {/* Card 2: Dynamic Profile (col-span-1 md:col-span-7) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            className="col-span-1 md:col-span-7 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col justify-between h-full cursor-default"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-[#a299af]/5 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100" />
-            
-            <div className="flex flex-col h-full justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
-                  </div>
-                </div>
-                
-                <h3 className="font-bold text-sm sm:text-2xl text-[#0c0e0b] mb-1 sm:mb-3">Dynamic Profile</h3>
-                <p className="text-[10px] sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium mb-4 sm:mb-8 line-clamp-3 xs:line-clamp-none">
-                  A comprehensive, customized visual card loads in seconds. Instantly update social links, bio description, customized tag color profiles, or contact info anytime via your web dashboard.
-                </p>
-              </div>
-
-              <div className="relative w-full aspect-[16/10] rounded-lg sm:rounded-2xl overflow-hidden bg-[#F4F3EE]/40 border border-[#0c0e0b]/5 flex items-center justify-center mt-auto">
-                <Image 
-                  src="https://i.ibb.co.com/JRyHX9JW/phone.png" 
-                  alt="Dynamic Profile App mockup"
-                  fill
-                  className="object-contain p-2 sm:p-4 group-hover:scale-[1.03] transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Card 3: Privacy First (col-span-2 md:col-span-12) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-            className="col-span-1 md:col-span-12 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col md:flex-row items-stretch md:items-center gap-6 sm:gap-8 justify-between cursor-default"
-          >
-            <div className="absolute top-0 right-0 w-36 h-36 sm:w-48 sm:h-48 bg-[#a299af]/5 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100" />
-            
-            <div className="flex-1 max-w-xl">
-              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                  <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
-                </div>
-              </div>
-              
-              <h3 className="font-bold text-base sm:text-2xl text-[#0c0e0b] mb-1.5 sm:mb-3">Privacy First Control</h3>
-              <p className="text-xs sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium">
-                You control exactly what you share, always. Complete safety is built directly into our ecosystem with easy-toggle settings, public/private profile options, and strict token encryption.
-              </p>
-            </div>
-
-            <div 
-              className="relative w-full md:w-56 h-36 md:h-44 rounded-xl sm:rounded-2xl overflow-hidden bg-[#F4F3EE]/40 border border-[#0c0e0b]/5 flex flex-col items-center justify-center shrink-0 mt-2 md:mt-0 select-none cursor-pointer group"
-              onClick={() => setIsProfilePublic(!isProfilePublic)}
+      <section id="demo-section" className="relative py-24 w-full z-10 bg-[#F9F8F6] overflow-hidden">
+        {/* Subtle Background Elements */}
+        <div className="absolute inset-0 bg-[radial-gradient(#e5e5e5_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-gradient-to-b from-white/90 to-transparent blur-3xl pointer-events-none opacity-80"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-[#F4F3EE] to-transparent blur-3xl pointer-events-none opacity-50"></div>
+         <div className="px-4 sm:px-6 md:px-12 max-w-6xl mx-auto relative z-10">
+          <div className="flex flex-col items-center mb-16 text-center">
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0c0e0b] mb-4"
             >
-              <button 
-                className={`relative w-24 h-12 rounded-full transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus:outline-none focus:ring-4 focus:ring-[#0c0e0b]/10 ${isProfilePublic ? 'bg-[#0c0e0b] group-hover:bg-[#1a1a1a]' : 'bg-[#e5e5e5] group-hover:bg-[#d4d4d4]'}`}
-              >
-                <div className="absolute inset-0 rounded-full shadow-inner opacity-20 pointer-events-none" />
-                <div 
-                  className="absolute top-1 left-1 bg-white w-10 h-10 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.15)] flex items-center justify-center transition-transform duration-300 ease-out"
-                  style={{ transform: `translateX(${isProfilePublic ? 48 : 0}px)` }}
-                >
-                  {isProfilePublic ? (
-                     <Globe className="w-5 h-5 text-[#0c0e0b]" />
-                  ) : (
-                     <Lock className="w-5 h-5 text-slate-400" />
-                  )}
-                </div>
-              </button>
-              <span className="mt-5 text-[10px] font-bold text-[#0c0e0b]/40 uppercase tracking-widest transition-colors group-hover:text-[#0c0e0b]/60">
-                {isProfilePublic ? 'Public Visibility' : 'Private Mode'}
-              </span>
-            </div>
-          </motion.div>
+              Just Tap. That’s It.
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-[#0c0e0b]/60 max-w-2xl text-base sm:text-lg leading-relaxed"
+            >
+              Tap your Rifelo NFC tag to any smartphone and instantly open your digital profile. No apps. No friction. Just seamless interaction.
+            </motion.p>
+          </div>
 
-          {/* Card 4: Queue System (col-span-1 md:col-span-4) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            className="col-span-1 md:col-span-4 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-5 sm:p-8 rounded-[1.5rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col cursor-default"
-          >
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                <ListOrdered className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
+          {/* Bento Grid Feature Area */}
+          <div className="max-w-5xl mx-auto w-full">
+            {/* Mobile: Horizontal scroll/carousel, Desktop: Grid */}
+            <div className="flex md:grid md:grid-cols-2 lg:grid-cols-12 gap-5 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              
+              {/* Feature 1: NFC Wristband */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+                 
+                 <div className="flex justify-center items-start mb-4 md:mb-5 relative z-10 text-center">
+                     <div className="w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-3xl overflow-hidden bg-slate-50 border border-black/5 relative group-hover:shadow-inner transition-all duration-500">
+                        <Image 
+                           src="https://i.ibb.co/pjs2hJQD/close-up-wristband.png"
+                           alt="NFC Wristband"
+                           fill
+                           className="object-cover group-hover:scale-105 transition-transform duration-700"
+                           referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-60" />
+                     </div>
+                  </div>
+                 <div className="relative z-10">
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">NFC Wristband</h3>
+                    <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
+                      One tap, instant share. Your wristband becomes the fastest way to exchange your identity—no typing, no apps, no friction.
+                    </p>
+                 </div>
               </div>
-            </div>
-            <h3 className="font-bold text-base sm:text-xl text-[#0c0e0b] mb-2">Queue System</h3>
-            <p className="text-xs sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium">
-              Manage your connections efficiently. Build smart waiting lists and interactive queues without needing any dedicated hardware.
-            </p>
-          </motion.div>
 
-          {/* Card 5: Analytics (col-span-1 md:col-span-4) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.25 }}
-            className="col-span-1 md:col-span-4 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-5 sm:p-8 rounded-[1.5rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col cursor-default"
-          >
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
+              {/* Feature 2: Digital Identity */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-8 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col md:flex-row gap-5 sm:gap-6 md:gap-8 justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:scale-110 transition-transform duration-700"></div>
+                 
+                 <div className="flex-1 flex flex-col justify-between py-1 relative z-10">
+                   <div className="relative z-10 w-full mb-1">
+                     <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Dynamic Profile</h3>
+                     <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium max-w-md mt-2">
+                       Create once, update forever. Your profile card reflects who you are—customize links, bio, colors, and contacts in real-time from your dashboard.
+                     </p>
+                   </div>
+                 </div>
+
+                 {/* Image Area - Digital Identity Mockup */}
+                 <div className="relative z-10 w-full md:w-[260px] lg:w-[280px] h-52 md:h-auto rounded-3xl overflow-hidden bg-slate-50 flex-shrink-0 border border-black/5 flex items-center justify-center p-3 text-center group-hover:scale-[1.02] transition-transform duration-500">
+                     {/* UI Mockup matching the actual Digital Identity */}
+                     <div className="w-[85%] max-w-[195px] h-[95%] max-h-full bg-white rounded-xl shadow-[0_4px_10px_-4px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col pt-3 px-3 relative overflow-hidden text-left">
+                       {/* Header */}
+                       <div className="mb-3">
+                         <div className="font-bold text-[11px] tracking-tight text-slate-900 leading-none">Marfel Ringga P</div>
+                         <div className="text-[7.5px] text-slate-500 mt-0.5">Founder at Rifelo</div>
+                       </div>
+                       
+                       {/* Contact Details */}
+                       <div className="flex flex-col gap-1 mb-2">
+                         <div className="flex items-center text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                           <Briefcase className="w-2.5 h-2.5 mr-1 text-slate-400 shrink-0" />
+                           <span className="text-[7px] font-medium truncate">Rifelo</span>
+                         </div>
+                         <div className="flex items-center text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                           <Mail className="w-2.5 h-2.5 mr-1 text-slate-400 shrink-0" />
+                           <span className="text-[7px] font-medium truncate flex-1">support@rifelo.com</span>
+                         </div>
+                       </div>
+
+                       {/* Links */}
+                       <div className="flex gap-2">
+                         <div className="w-16 h-6 bg-slate-50 border border-slate-100 rounded-md flex items-center px-1.5 shadow-sm">
+                           <Instagram className="w-2.5 h-2.5 text-[#E1306C] mr-0.5 shrink-0" />
+                           <span className="text-[7px] font-bold text-slate-900 truncate">Instagram</span>
+                         </div>
+                         <div className="w-16 h-6 bg-slate-50 border border-slate-100 rounded-md flex items-center px-1.5 shadow-sm">
+                           <Linkedin className="w-2.5 h-2.5 text-[#0077B5] mr-0.5 shrink-0" />
+                           <span className="text-[7px] font-bold text-slate-900 truncate">LinkedIn</span>
+                         </div>
+                       </div>
+
+                       <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white to-transparent" />
+                     </div>
+                 </div>
               </div>
-            </div>
-            <h3 className="font-bold text-base sm:text-xl text-[#0c0e0b] mb-2">Analytics Insights</h3>
-            <p className="text-xs sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium">
-              See who's engaging with your profile. Gather actionable insights to understand your network and track everyday connection drops.
-            </p>
-          </motion.div>
 
-          {/* Card 6: Circle Management (col-span-1 md:col-span-4) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-            className="col-span-1 md:col-span-4 bg-white/60 backdrop-blur-md hover:bg-white border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 p-5 sm:p-8 rounded-[1.5rem] shadow-sm hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)] transition-all duration-500 group relative overflow-hidden flex flex-col cursor-default"
-          >
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F4F3EE] flex items-center justify-center border border-[#0c0e0b]/5 shrink-0">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#0c0e0b]" />
+              {/* Feature 3: Privacy First Control */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/15 transition-all duration-700"></div>
+                 
+                 <div className="flex justify-center items-start mb-4 md:mb-5">
+                   {/* Image Area - Privacy Shield/Toggle */}
+                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-[1.5rem] overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/50 transition-colors duration-500">
+                     <div className="flex flex-col items-center gap-3 w-full px-4">
+                       <div className="w-full bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                           <motion.div 
+                             animate={{ backgroundColor: ["#f1f5f9", "#d1fae5", "#f1f5f9"] }}
+                             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
+                             className="w-6 h-6 rounded-full flex items-center justify-center"
+                           >
+                              <motion.div
+                                animate={{ color: ["#64748b", "#059669", "#64748b"] }}
+                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
+                              >
+                               <Lock className="w-3 h-3" />
+                              </motion.div>
+                           </motion.div>
+                           <div className="flex flex-col items-start gap-1">
+                             <div className="w-12 h-1.5 bg-slate-800 rounded-full" />
+                             {/* Fading element to represent hiding/showing */}
+                             <motion.div 
+                               animate={{ opacity: [0.1, 1, 0.1] }}
+                               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
+                               className="w-16 h-1 bg-slate-400 rounded-full" 
+                             />
+                           </div>
+                         </div>
+                         {/* Animated Toggle */}
+                         <motion.div 
+                           animate={{ backgroundColor: ["#e2e8f0", "#10b981", "#e2e8f0"] }}
+                           transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
+                           className="w-8 h-4.5 rounded-full relative p-0.5"
+                         >
+                           <motion.div 
+                             animate={{ x: [0, 14, 0] }}
+                             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
+                             className="w-3.5 h-3.5 bg-white rounded-full shadow-sm"
+                           />
+                         </motion.div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="relative z-10">
+                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Privacy First Control</h3>
+                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
+                     You decide what's visible. Toggle who sees what—public, private, or circle-exclusive—with zero data leaks.
+                   </p>
+                 </div>
               </div>
-            </div>
-            <h3 className="font-bold text-base sm:text-xl text-[#0c0e0b] mb-2">Circle Management</h3>
-            <p className="text-xs sm:text-sm text-[#0c0e0b]/60 leading-relaxed font-medium">
-              Create specific circles for work, events, or social outings. Curate what different groups see in seconds instantly.
-            </p>
-          </motion.div>
-        </div>
+              
+              {/* Feature 4: Custom Direct */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-[#0c0e0b] border border-transparent rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group shadow-[0_12px_32px_-4px_rgba(0,0,0,0.2)]">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:bg-amber-500/20 transition-all duration-700"></div>
+                 
+                 <div className="relative z-10 mb-4 md:mb-5">
+                   <h3 className="text-xl sm:text-2xl font-bold text-white mb-1.5">Custom Direct</h3>
+                   <p className="text-white/70 leading-relaxed text-sm sm:text-base font-medium">
+                     Skip the profile, go straight to the point. Redirect users directly to any URL—your latest video, campaign, or portfolio.
+                   </p>
+                 </div>
 
-        <div className="mt-16 flex justify-center">
-          <Link 
-            href={getYoursNowLink}
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-[#0c0e0b] transition-all shadow-lg active:scale-95 text-base"
-          >
-            Order Wristband <ArrowRight className="w-5 h-5" />
-          </Link>
+                 <div className="flex justify-center items-start mt-1 md:mt-2">
+                   {/* Image Area - Custom Direct Mockup from /tags */}
+                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-[1.5rem] overflow-hidden bg-white/5 border border-white/10 flex flex-col justify-center p-3">
+                      
+                      {/* Mockup of Edit Tag Form */} <SpecialCustomDirectMockup /> <div className="hidden pb-0 select-none pointer-events-none"> {/* */}
+                      <div className="w-full max-w-[200px] mx-auto bg-white rounded-xl shadow-lg border border-slate-100 p-3 relative z-10">
+                        <div className="flex justify-between items-center mb-2">
+                           <div className="text-[10px] font-bold text-slate-800">Edit Tag</div>
+                           <div className="w-4 h-4 rounded-full hover:bg-slate-100 flex items-center justify-center">
+                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                           </div>
+                        </div>
+
+                        <div className="mb-2">
+                           <div className="text-[7px] font-medium text-slate-500 mb-1">Interaction Mode</div>
+                           <div className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white">
+                              <span className="text-[8px] font-medium text-slate-800 truncate">Custom URL Redirect</span>
+                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                           </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <div>
+                              <div className="text-[7px] font-medium text-slate-500 mb-1">Custom URL</div>
+                              <div className="w-full px-2 py-1.5 rounded-lg border border-purple-500/50 bg-purple-50/30 flex items-center shadow-[0_0_0_1px_rgba(168,85,247,0.1)] overflow-hidden">
+                                 <div className="flex items-center min-w-max">
+                                    <span className="text-[8px] text-slate-800 font-medium font-mono">https://rifelo.com/my-latest-video</span>
+                                    <motion.div 
+                                       animate={{ opacity: [1, 0] }}
+                                       transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                                       className="w-px h-3 bg-slate-800 ml-0.5"
+                                    ></motion.div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <div className="mt-3">
+                           <div className="w-full bg-slate-900 text-white rounded-lg py-1.5 flex items-center justify-center gap-1 shadow-sm transition-transform hover:scale-95 cursor-default">
+                              <span className="text-[8px] font-bold pb-px">Save Changes</span>
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* */} </div> {/* Decoration floating elements */}
+                      <div className="absolute rounded-full w-20 h-20 bg-purple-500/20 blur-xl top-0 left-0 group-hover:bg-purple-500/30 transition-colors duration-500 delay-100"></div>
+                   </div>
+                 </div>
+              </div>
+
+              {/* Feature 5: Inbox */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/15 group-hover:scale-110 transition-all duration-700"></div>
+                 
+                 <div className="flex justify-center items-start mb-4 md:mb-5">
+                   {/* Image Area - Inbox Mockup */}
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-[1.5rem] overflow-hidden bg-slate-100/50 border border-black/5 flex items-center justify-center flex-col perspective-1000">
+                     
+                      {/* Custom Inbox Animation */}
+                      <div className="relative w-full h-full">
+                        {/* 1. Sender View (Leave a Message) */}
+                        <motion.div 
+                          animate={{ opacity: [1, 1, 0, 0, 1], y: [0, 0, -10, 10, 0] }}
+                          transition={{ repeat: Infinity, duration: 6, times: [0, 0.4, 0.45, 0.95, 1], ease: "easeInOut" }}
+                          className="absolute inset-0 flex items-center justify-center p-4"
+                        >
+                          <div className="w-[90%] bg-white border border-slate-200 rounded-2xl p-3 sm:p-3.5 shadow-sm flex flex-col gap-2 sm:gap-2.5 relative">
+                            <div>
+                              <div className="text-[10px] font-bold text-slate-900 mb-0.5">Leave a Message</div>
+                              <div className="text-[8px] text-slate-500">Send a secret message or say hello.</div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              {/* Pseudo Name Input */}
+                              <div className="w-full h-6 border border-slate-200 rounded-lg bg-slate-50 flex items-center px-2">
+                                <div className="w-16 h-1.5 bg-slate-300 rounded-full" />
+                              </div>
+                              {/* Pseudo Textarea */}
+                              <div className="w-full h-12 border border-slate-200 rounded-lg bg-slate-50 p-2 flex flex-col gap-1.5">
+                                <div className="w-[80%] h-1.5 bg-slate-300 rounded-full" />
+                                <div className="w-[60%] h-1.5 bg-slate-300 rounded-full" />
+                              </div>
+                              {/* Send Button */}
+                              <motion.div 
+                                animate={{ scale: [1, 1, 0.95, 1, 1], backgroundColor: ["#0f172a", "#0f172a", "#3b82f6", "#0f172a", "#0f172a"] }}
+                                transition={{ repeat: Infinity, duration: 6, times: [0, 0.25, 0.3, 0.35, 1] }}
+                                className="w-full h-7 bg-slate-900 rounded-lg flex items-center justify-center gap-1 mt-1 shadow-sm"
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                <span className="text-white text-[9px] font-medium">Send Message</span>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* 2. Receiver Inbox View */}
+                        <motion.div 
+                          animate={{ opacity: [0, 0, 1, 1, 0], y: [10, 10, 0, 0, -10] }}
+                          transition={{ repeat: Infinity, duration: 6, times: [0, 0.45, 0.5, 0.9, 1], ease: "easeInOut" }}
+                          className="absolute inset-0 flex items-center justify-center flex-col px-4"
+                        >
+                          {/* Background message card */}
+                          <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[85%] bg-white border border-slate-200 rounded-2xl p-4 flex flex-col scale-90 opacity-60 z-0">
+                             <div className="flex justify-between items-start mb-2">
+                               <div className="flex flex-col">
+                                 <div className="w-16 h-2 rounded-full bg-slate-200 mb-1" />
+                                 <div className="w-10 h-1.5 rounded-full bg-slate-100" />
+                               </div>
+                               <div className="w-4 h-4 rounded hover:bg-red-50 text-slate-300" />
+                             </div>
+                             <div className="bg-slate-50 rounded-xl p-2 h-8" />
+                          </div>
+
+                          {/* Foreground new message card */}
+                          <motion.div 
+                            animate={{ y: [0, 0, -15, -15, 0], scale: [0.95, 0.95, 1, 1, 0.95], opacity: [0, 0, 1, 1, 0] }}
+                            transition={{ repeat: Infinity, duration: 6, times: [0, 0.45, 0.5, 0.9, 1] }}
+                            className="relative w-[90%] bg-white border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col z-10 shadow-lg mt-4 sm:mt-6"
+                          >
+                            <div className="flex justify-between items-start mb-2 pr-4 relative">
+                              <button className="absolute top-0 right-0 text-slate-300 hover:text-red-500">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"></polyline>
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                              </button>
+                              <div>
+                                <h3 className="font-semibold text-slate-900 text-[10px]">Sarah Jenkins</h3>
+                                <div className="flex items-center text-[8px] text-slate-400 mt-0.5">
+                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                  </svg>
+                                  Just now
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 p-2.5 rounded-xl text-slate-700 text-[9px] leading-relaxed">
+                              Hi! I loved your portfolio. I would like to discuss a potential collaboration...
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      </div>
+
+                   </div>
+                 </div>
+
+                 <div className="relative z-10">
+                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Inbox</h3>
+                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
+                     Receive messages, inquiries, and connections straight from your digital profile. Centralize your network effortlessly.
+                   </p>
+                 </div>
+              </div>
+
+              {/* Feature 6: Circle Management */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-12 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 md:gap-8 relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-all duration-700"></div>
+                 <div className="flex-1 relative z-10 max-w-2xl">
+                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Circle Management</h3>
+                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
+                     Different worlds, one identity. Create circles for work, friends, events—share different versions of you with different people.
+                   </p>
+                 </div>
+                 {/* Image Area - Circle Management Graphic */}
+                 <div className="relative z-10 w-full md:w-[340px] h-64 md:h-auto self-stretch rounded-3xl overflow-hidden bg-slate-900 flex-shrink-0 border border-black/5 flex items-center justify-center p-4 text-center group-hover:bg-slate-800 transition-colors duration-500">
+                    <div className="relative w-full h-full flex flex-col items-center justify-center">
+                       {/* Resonance Animation */}
+                       <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-28 md:h-28 lg:w-28 lg:h-28 xl:w-28 xl:h-28 flex items-center justify-center mx-auto my-auto mt-4 mb-4">
+                          {/* Base Glow */}
+                          <div
+                            className="absolute inset-0 rounded-full transition-all duration-700"
+                            style={{
+                              background: `radial-gradient(circle, #a855f7 0%, transparent 80%)`,
+                              boxShadow: `0 0 55px #a855f7, inset 0 0 15px rgba(255,255,255,0.1)`
+                            }}
+                          />
+                          
+                          {/* Pulse Glow */}
+                          <div
+                            className="absolute inset-0 rounded-full animate-pulse"
+                            style={{ boxShadow: `0 0 45px #a855f7` }}
+                          />
+                          
+                          {/* Orbiting Aura Circle */}
+                          <div 
+                            className="absolute inset-[-18px] md:inset-[-14px] rounded-full animate-[spin_6s_linear_infinite]"
+                          >
+                            <div 
+                              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg"
+                              style={{ 
+                                backgroundColor: '#10b981',
+                                boxShadow: `0 0 10px #10b981, 0 0 20px #10b981`
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Text inside the circle */}
+                          <div className="relative w-full h-full flex items-center justify-center z-20">
+                             <div className="text-white font-bold tracking-widest text-[12px] uppercase">Rifelo</div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+            </div>
+          </div>
         </div>
       </section>
 
       {/* 3.5 Use Case Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-4xl mx-auto relative z-10">
+      <section className="py-28 md:py-40 lg:py-52 px-4 sm:px-6 md:px-12 max-w-4xl mx-auto relative z-10 flex flex-col items-center justify-center min-h-[400px] sm:min-h-[480px] lg:min-h-[560px]">
         <motion.div
            initial={{ opacity: 0, y: 20 }}
            whileInView={{ opacity: 1, y: 0 }}
            viewport={{ once: true }}
            transition={{ duration: 0.8 }}
-           className="text-center"
+           className="text-center flex flex-col items-center justify-center"
         >
           <h2 className="text-[22px] sm:text-3xl md:text-4xl font-semibold mb-6 text-[#0c0e0b]">
             Built for Real-World Interaction.
           </h2>
-          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base max-w-2xl mx-auto">
+          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base max-w-2xl mx-auto mb-8">
             From school and communities to business and networking events, Rifelo helps you share who you are without effort. No more missed connections.
           </p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Link 
+              href="/nfcwristband"
+              className="inline-flex items-center justify-center px-8 py-3 bg-[#1A1A1A] text-white rounded-full text-[10px] sm:text-xs font-bold tracking-widest uppercase hover:bg-[#0c0e0b] transition-all shadow-md active:scale-95 border border-[#1A1A1A]"
+            >
+              Coming Soon
+            </Link>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -1246,6 +1604,7 @@ export default function LandingPage() {
                       src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
                       alt="Rifelo Logo" 
                       fill
+                      sizes="32px"
                       className="object-contain"
                       referrerPolicy="no-referrer"
                     />
@@ -1253,7 +1612,7 @@ export default function LandingPage() {
                   <span className="font-bold text-xl sm:text-2xl tracking-tight text-[#0c0e0b]">Rifelo</span>
                 </Link>
                 <p className="text-sm text-[#0c0e0b]/50 leading-relaxed font-medium mb-8">
-                  Designing the future of intentional connections. Rifelo is an NFC-powered digital identity platform for modern networking.
+                  Designing the future of intentional connections. Rifelo is an NFC-powered dynamic profile platform for modern networking.
                 </p>
                 <div className="flex gap-4 sm:gap-5">
                   {[
@@ -1284,7 +1643,7 @@ export default function LandingPage() {
                     <ul className="space-y-3 text-sm text-[#0c0e0b]/50 font-medium">
                       <li><Link href="/what-is-rifelo" className="hover:text-[#0c0e0b] transition-colors">Features</Link></li>
                       <li><Link href="/rifelo-features" className="hover:text-[#0c0e0b] transition-colors">Pricing</Link></li>
-                      <li><Link href="/join-rifelo" className="hover:text-[#0c0e0b] transition-colors">Digital Identity</Link></li>
+                      <li><Link href="/join-rifelo" className="hover:text-[#0c0e0b] transition-colors">Dynamic Profile</Link></li>
                     </ul>
                   </div>
 
